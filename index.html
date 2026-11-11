@@ -167,6 +167,22 @@ html.desk #wl{display:flex;flex-wrap:wrap;align-content:flex-start;gap:6px;flex:
 #wl span{padding:3px 11px;border-radius:12px;font-weight:900;font-size:16px;text-transform:uppercase;color:hsl(var(--h) var(--ls) var(--ll));background:color-mix(in oklab,hsl(var(--h) 85% 56%) 16%,var(--tile1));box-shadow:inset 0 0 0 1px var(--line)}
 html.desk #toast{order:0}
 html.desk #card{transform:scale(var(--sc,1))}
+/* бустеры */
+#boost{order:2;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%;max-width:504px;align-self:center;padding-top:6px}
+.bst{position:relative;border:0;border-radius:16px;padding:8px 2px 6px;font:inherit;color:var(--fg);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;background:linear-gradient(180deg,var(--card),var(--card2));box-shadow:0 3px 0 var(--line2),inset 0 0 0 1px var(--line)}
+.bst:active{transform:translateY(2px)}
+.bst .ic{font-size:24px;line-height:1}
+.bst small{font-size:11px;font-weight:800;color:var(--mut)}
+.bst .hb{position:absolute;top:-7px;right:-3px;min-width:22px;height:22px;padding:0 5px;border-radius:11px;background:linear-gradient(180deg,var(--acc),var(--acc2));color:#fff;font-size:12px;line-height:22px;text-align:center;box-shadow:0 0 0 2px var(--bg1)}
+.bst.dis{opacity:.45;filter:grayscale(1)}
+.bst.on{box-shadow:0 0 0 3px var(--acc),0 3px 0 var(--line2)}
+#board button.hs{box-shadow:0 0 0 3px #ffc43d,0 0 14px rgba(255,196,61,.85),inset 0 1px 0 rgba(255,255,255,.4)}
+#board button.ht{box-shadow:inset 0 0 0 3px #ffc43d,0 0 12px rgba(255,196,61,.7)}
+#board.hm button.f{box-shadow:0 0 0 2px #ff6b6b,inset 0 1px 0 rgba(255,255,255,.4);cursor:crosshair}
+.wh{grid-column:1/-1;font-weight:900;font-size:15px;color:var(--mut);padding:8px 4px 0;letter-spacing:.5px}
+html.desk #boost{order:0;gap:10px;max-width:none;padding-top:10px}
+html.desk .bst{padding:10px 2px 8px}html.desk .bst .ic{font-size:28px}
+@media (max-height:720px) and (max-aspect-ratio:6/5){.bst small{display:none}.bst{padding:6px 2px}.bst .ic{font-size:22px}}
 .noanim *,.noanim *::before{animation:none!important;transition:none!important}
 .lite .sp-b:nth-child(n+9){display:none}
 @media (prefers-reduced-motion:reduce){.cf{display:none}}
@@ -195,7 +211,7 @@ html.desk #card{transform:scale(var(--sc,1))}
   <div class="acardw"><div class="ab-box">
    <div class="mas" id="mas2"></div>
    <h2 class="ab-h">ОБ ИГРЕ</h2><div class="ab-sub">СЛОВА-LINES</div>
-   <p class="ab-txt">Классические Lines, только вместо шариков цветные буквы: двигайте их по полю и складывайте слова. Бесконечный режим и 12 уровней с целями.</p>
+   <p class="ab-txt">Классические Lines, только вместо шариков цветные буквы: двигайте их по полю и складывайте слова. Бесконечный режим, 100 уровней с целями и бустеры.</p>
    <div class="ab-by"><small>Игру создал</small><b>Олег Боженов</b></div>
    <div class="ab-st" id="astat"></div>
    <button class="btn" data-go="menu">НАЗАД</button>
@@ -208,6 +224,12 @@ html.desk #card{transform:scale(var(--sc,1))}
    <div class="goal" id="goal"></div>
    <div class="recp"><span style="font-size:30px">🏆</span><div><small id="recl">Рекорд</small><b id="recv">0</b></div></div>
    <div id="wl"></div>
+   <div id="boost">
+    <button class="bst" id="bHint"><span class="ic">💡</span><small>Подсказка</small><b class="hb" id="cHint">3</b></button>
+    <button class="bst" id="bHam"><span class="ic">🔨</span><small>Молоток</small><b class="hb" id="cHam">2</b></button>
+    <button class="bst" id="bShf"><span class="ic">🔀</span><small>Перемешать</small><b class="hb" id="cShf">1</b></button>
+    <button class="bst" id="bUnd"><span class="ic">↩️</span><small>Отмена</small><b class="hb" id="cUnd">2</b></button>
+   </div>
    <div id="toast"></div>
   </div>
   <div id="bwrap"><div id="bw"><div id="board"></div><canvas id="fx"></canvas></div></div>
@@ -256,7 +278,7 @@ let closable=false;
 function ov(h,btns,cl){closable=!!cl;const c=$("card");c.innerHTML=h;btns.forEach(([t,f,k])=>{const b=document.createElement("button");b.className="btn "+(k||"");b.textContent=t;b.onclick=()=>{snd.click();f()};c.appendChild(b)});$("ov").classList.remove("hidden")}
 const cov=()=>$("ov").classList.add("hidden");
 $("ov").addEventListener("click",e=>{if(e.target.id=="ov"&&closable&&paused)resume()});
-const RULES=[["👆","Нажмите на букву, затем на свободную клетку: буква пройдёт туда по свободному пути (по горизонтали и вертикали)."],["🔤","Выстройте слово из 3–5 букв в строку (слева направо) или в столбец (сверху вниз): буквы исчезнут и принесут очки."],["⭐","Очки за слово: длина² × 2. Собрали слово: новые буквы не появляются. Нет слова: добавляются три новые."],["🧠","Когда на поле больше 10 букв, игра следит, чтобы из них можно было составить хотя бы несколько слов."],["🎯","В уровнях нужно выполнить цель: собрать N слов или набрать N очков. В бесконечном режиме играйте ради рекорда."],["💥","Игра заканчивается, когда поле заполнено."]];
+const RULES=[["👆","Нажмите на букву, затем на свободную клетку: буква пройдёт туда по свободному пути (по горизонтали и вертикали)."],["🔤","Выстройте слово из 3–5 букв в строку (слева направо) или в столбец (сверху вниз): буквы исчезнут и принесут очки."],["⭐","Очки за слово: длина² × 2. Собрали слово: новые буквы не появляются. Нет слова: добавляются три новые."],["🧠","Когда на поле больше 10 букв, игра следит, чтобы из них можно было составить хотя бы несколько слов."],["🎯","В уровнях нужно выполнить цель: собрать N слов или набрать N очков. В бесконечном режиме играйте ради рекорда."],["🛠️","Бустеры: 💡 подсказка покажет ход со словом, 🔨 молоток убирает одну букву, 🔀 перемешать переставляет буквы, ↩️ отмена возвращает последнее действие. Их число ограничено."],["💥","Игра заканчивается, когда поле заполнено."]];
 const rulesHTML=()=>RULES.map(([e,t],k)=>`<div class="rule"><i style="--h:${hue(k*4+3)}">${e}</i><span>${t}</span></div>`).join("");
 $("rl").innerHTML=rulesHTML();
 const swRow=(ic,l,k)=>`<div class="srow"><span>${ic} ${l}</span><label class="sw"><input type="checkbox" data-k="${k}" ${S[k]?"checked":""}><i></i></label></div>`;
@@ -279,8 +301,8 @@ function show(id){
 document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{snd.click();show(b.dataset.go)});
 $("bPlay").onclick=()=>{snd.click();show("levels")};$("bInf").onclick=()=>{snd.click();begin("inf",0)};
 $("bRules").onclick=()=>{snd.click();show("rules")};$("bSet").onclick=()=>{snd.click();show("settings")};$("bAbout").onclick=()=>{snd.click();show("about")};
-function updMenu(){$("bPlay").innerHTML=`▶ Играть<small>Уровень ${Math.min(S.unlocked,12)} из 12</small>`;$("bInf").innerHTML=`∞ Бесконечный<small>рекорд ${S.best}</small>`}
-function updAbout(){$("astat").innerHTML=`<div class="alab">Ваш прогресс</div><div class="agrid"><div><b>${Math.min(S.unlocked-1,12)}/12</b><small>уровней</small></div><div><b>${S.tw}</b><small>слов</small></div><div><b>🏆 ${S.best}</b><small>рекорд</small></div></div>`}
+function updMenu(){$("bPlay").innerHTML=`▶ Играть<small>Уровень ${Math.min(S.unlocked,MAXL)} из ${MAXL}</small>`;$("bInf").innerHTML=`∞ Бесконечный<small>рекорд ${S.best}</small>`}
+function updAbout(){$("astat").innerHTML=`<div class="alab">Ваш прогресс</div><div class="agrid"><div><b>${Object.keys(S.lb).length}/${MAXL}</b><small>уровней</small></div><div><b>${S.tw}</b><small>слов</small></div><div><b>🏆 ${S.best}</b><small>рекорд</small></div></div>`}
 $("ttl").innerHTML=[..."Слова-Lines"].map((c,i)=>`<span class="lt" style="--h:${hue(i*3+1)}">${c}</span>`).join("");
 const mw=w=>[...w].map((c,i)=>`<i class="tile" style="${st(AL.indexOf(c))};transform:rotate(${[-4,3,-2,4,-3][i%5]}deg)"><span class="lt">${c}</span></i>`).join("");
 $("mas").innerHTML=mw("слово");$("mas2").innerHTML=mw("игра");
@@ -289,15 +311,16 @@ $("spl").innerHTML=[..."Bojenov"].map((c,i)=>`<span style="--i:${i}">${c}</span>
 $("spb").innerHTML=Array.from({length:16},()=>{const z=20+rnd(60);return `<div class="sp-b" style="width:${z}px;height:${z}px;left:${rnd(96)}%;animation-duration:${4+rnd(5)}s;animation-delay:${-rnd(6)}s"></div>`}).join("");
 setTimeout(()=>{$("splash").classList.add("out");setTimeout(()=>$("splash").remove(),700)},2900);
 /* ---- уровни ---- */
-const goal=l=>l%2?{t:"w",v:2+l}:{t:"s",v:80*l};
+const MAXL=100;
+const goal=l=>l%2?{t:"w",v:2+Math.round(l*.55)}:{t:"s",v:Math.round((60+l*28)/10)*10};
 const goalTxt=l=>{const G=goal(l);return G.t=="w"?`Составьте слов: ${G.v}`:`Наберите очков: ${G.v}`};
 function renderLevels(){
  const g=$("lvgrid");g.innerHTML="";let cur;
- for(let l=1;l<=12;l++){const G=goal(l),b=document.createElement("button"),lock=l>S.unlocked,done=!!S.lb[l];
+ for(let l=1;l<=MAXL;l++){if(l%10==1){const w=document.createElement("div");w.className="wh";w.textContent="Уровни "+l+"–"+(l+9);g.appendChild(w)}const G=goal(l),b=document.createElement("button"),lock=l>S.unlocked,done=!!S.lb[l];
   b.className="lv"+(lock?" lock":"")+(done?" done":"");
   b.innerHTML=lock?"🔒":`${l}<small>${done?"✓ "+S.lb[l]:G.v+(G.t=="w"?" слов":" очков")}</small>`;
   if(!lock)b.onclick=()=>{snd.click();begin("lvl",l)};
-  if(l==Math.min(S.unlocked,12))cur=b;g.appendChild(b)}
+  if(l==Math.min(S.unlocked,MAXL))cur=b;g.appendChild(b)}
  if(cur)setTimeout(()=>cur.scrollIntoView({block:"center"}),60);
 }
 /* ---- поле ---- */
@@ -305,13 +328,13 @@ let g={grid:[],score:0,words:0,sel:-1,busy:true,mode:"inf",level:0},playing=fals
 const cells=[];
 for(let i=0;i<T;i++){const b=document.createElement("button");b.setAttribute("aria-label","клетка");b.onclick=()=>tap(i);$("board").appendChild(b);cells.push(b)}
 function render(){
- cells.forEach((c,i)=>{const v=g.grid[i];c.style.cssText=v>=0?st(v):"";c.innerHTML=v>=0?`<i class="lt b">${AL[v]}</i>`:"";c.className=(v>=0?"f ":"")+(i===g.sel?"sel ":"")+(g.fresh&&g.fresh.has(i)?"new":"")});
+ cells.forEach((c,i)=>{const v=g.grid[i];c.style.cssText=v>=0?st(v):"";c.innerHTML=v>=0?`<i class="lt b">${AL[v]}</i>`:"";c.className=(v>=0?"f ":"")+(g.hint&&g.hint[0]===i?"hs ":"")+(g.hint&&g.hint[1]===i?"ht ":"")+(i===g.sel?"sel ":"")+(g.fresh&&g.fresh.has(i)?"new":"")});
  g.fresh=null;
 }
 function bump(id,v){const e=$(id);e.textContent=v;e.classList.remove("bump");e.offsetWidth;e.classList.add("bump")}
 function buildHud(){
  $("score").textContent=g.score;$("words").textContent=g.words;$("toast").textContent="";recent=[];renderWl();
- $("goal").innerHTML=`<div class="pgoal"><i id="pg"></i><span id="pgt"></span></div>`;updHud();
+ $("goal").innerHTML=`<div class="pgoal"><i id="pg"></i><span id="pgt"></span></div>`;updHud();updBoost();
 }
 function updHud(){
  const rec=g.mode=="inf"?S.best:S.lb[g.level]||0;$("recv").textContent=Math.max(rec,g.score);$("recl").textContent=g.mode=="inf"?"Рекорд бесконечного":"Рекорд уровня";
@@ -321,7 +344,7 @@ function updHud(){
 function renderWl(){$("wl").innerHTML=recent.map(w=>`<span style="--h:${hue(AL.indexOf(w[0]))}">${w}</span>`).join("")}
 async function begin(mode,level){
  await dictReady;
- g={grid:Array(T).fill(-1),score:0,words:0,sel:-1,busy:true,mode,level,fresh:null};paused=false;playing=false;
+ const L=mode=="lvl";g={grid:Array(T).fill(-1),score:0,words:0,sel:-1,busy:true,mode,level,fresh:null,hint:null,hammer:false,snap:null,hints:L?3:5,ham:L?2:3,shf:L?1:2,und:L?2:3};paused=false;playing=false;
  show("game");fxSize();g.fresh=new Set(spawn(5));render();buildHud();
  if(mode=="lvl")ov(`<h2>Уровень ${level}</h2><div class="chip">🎯 ${goalTxt(level)}</div>`,[["Старт",go]]);
  else go();
@@ -330,16 +353,12 @@ function go(){cov();g.busy=false;playing=true;snd.spawn()}
 const resume=()=>{paused=false;cov()};
 function pauseMenu(){
  if(!playing||g.over)return;paused=true;
- ov(`<button class="x" id="cx">✕</button><h2>Пауза</h2>`,[["▶ Продолжить",resume,"ok"],["⚙ Настройки",()=>ovSet(),"alt"],["📖 Правила",()=>ovRules(),"alt"],["↻ Заново",()=>begin(g.mode,g.level),"alt"],["⌂ В меню",()=>{cov();show("menu")},"alt"]],1);
+ ov(`<button class="x" id="cx">✕</button><h2>Пауза</h2>`,[["▶ Продолжить",resume,"ok"],["⚙ Настройки",()=>ovSet(),"alt"],["↻ Заново",()=>begin(g.mode,g.level),"alt"],["⌂ В меню",()=>{cov();show("menu")},"alt"]],1);
  $("cx").onclick=resume;
 }
 function ovSet(){
  paused=true;ov(`<button class="x" id="cx">✕</button><div id="sbx" style="display:contents"></div>`,[],1);
  $("cx").onclick=resume;buildSettings($("sbx"),["← Назад",pauseMenu]);
-}
-function ovRules(){
- ov(`<button class="x" id="cx">✕</button><h2>Правила</h2><div class="rl">${rulesHTML()}</div>`,[["← Назад",pauseMenu]],1);
- $("cx").onclick=resume;
 }
 $("bPause").onclick=pauseMenu;
 /* ---- генерация букв ---- */
@@ -358,10 +377,10 @@ function spawn(k){
  }
  add.forEach((l,i)=>g.grid[empty[i]]=l);return empty.slice(0,k);
 }
+const LINES=[];for(let a=0;a<N;a++){LINES.push(Array.from({length:N},(_,c)=>a*N+c));LINES.push(Array.from({length:N},(_,r)=>r*N+a))}
 function findWords(){
- const rm=new Set(),found=[];let pts=0;const lines=[];
- for(let a=0;a<N;a++){lines.push(Array.from({length:N},(_,c)=>a*N+c));lines.push(Array.from({length:N},(_,r)=>r*N+a))}
- for(const L of lines){let i=0;
+ const rm=new Set(),found=[];let pts=0;
+ for(const L of LINES){let i=0;
   while(i<N){if(g.grid[L[i]]<0){i++;continue}
    let j=i;while(j<N&&g.grid[L[j]]>=0)j++;
    for(let p=i;p<j;){let f=0;
@@ -417,6 +436,8 @@ function path(a,b){
 }
 function tap(i){
  if(g.busy||!playing||paused)return;
+ if(g.hint){g.hint=null;render()}
+ if(g.hammer){if(g.grid[i]>=0)hammerAt(i);return}
  if(g.grid[i]>=0){g.sel=g.sel===i?-1:i;snd.sel();render();return}
  if(g.sel<0)return;
  const p=path(g.sel,i);
@@ -424,19 +445,75 @@ function tap(i){
  move(p);
 }
 async function move(p){
- g.busy=true;$("toast").textContent="";g.sel=-1;
+ g.busy=true;mkSnap();$("toast").textContent="";g.sel=-1;
  for(let k=1;k<p.length;k++){g.grid[p[k]]=g.grid[p[k-1]];g.grid[p[k-1]]=-1;render();snd.step();await wait(32)}
  let r=findWords();
  if(r.found.length)await clear(r);
  else{g.fresh=new Set(spawn(3));render();snd.spawn();r=findWords();if(r.found.length){await wait(250);await clear(r)}}
- g.busy=false;
+ g.busy=false;endCheck();
+}
+function endCheck(){
  if(g.mode=="lvl"){const G=goal(g.level);if((G.t=="w"?g.words:g.score)>=G.v)return win()}
  if(g.grid.every(v=>v>=0))lose();
 }
+/* ---- бустеры ---- */
+const DIRS=[[1,0],[-1,0],[0,1],[0,-1]];
+const canUse=()=>playing&&!paused&&!g.busy&&!g.over;
+function updBoost(){
+ [["bHint","cHint","hints"],["bHam","cHam","ham"],["bShf","cShf","shf"],["bUnd","cUnd","und"]].forEach(([b,c,k])=>{$(c).textContent=g[k];$(b).classList.toggle("dis",g[k]<=0||(k=="und"&&!g.snap))});
+ $("bHam").classList.toggle("on",!!g.hammer);$("board").classList.toggle("hm",!!g.hammer);
+}
+function mkSnap(){g.snap={grid:g.grid.slice(),score:g.score,words:g.words,tw:S.tw};updBoost()}
+function reach(a){
+ const seen=new Uint8Array(T);seen[a]=1;const q=[a];
+ for(let h=0;h<q.length;h++){const x=q[h],r=x/N|0,c=x%N;for(const[dr,dc]of DIRS){const R=r+dr,C=c+dc;if(R<0||C<0||R>=N||C>=N)continue;const y=R*N+C;if(seen[y]||g.grid[y]>=0)continue;seen[y]=1;q.push(y)}}
+ return q.slice(1);
+}
+function findHint(){
+ let best=null,bp=0;
+ for(let a=0;a<T;a++){if(g.grid[a]<0)continue;
+  for(const b of reach(a)){g.grid[b]=g.grid[a];g.grid[a]=-1;const r=findWords();g.grid[a]=g.grid[b];g.grid[b]=-1;if(r.pts>bp){bp=r.pts;best=[a,b,r.found[0]]}}}
+ return best;
+}
+$("bHint").onclick=()=>{
+ if(!canUse()||g.hints<=0)return;
+ const h=findHint();
+ if(!h){$("toast").textContent="Ходов со словом нет — попробуйте «Перемешать»";return}
+ g.hints--;g.hammer=false;g.sel=-1;g.hint=[h[0],h[1]];render();updBoost();tone(880,.12,"triangle",.15);
+ $("toast").textContent="Подсказка: слово «"+h[2]+"»";
+};
+$("bHam").onclick=()=>{
+ if(!canUse()||g.ham<=0)return;
+ g.hammer=!g.hammer;g.sel=-1;g.hint=null;render();updBoost();snd.click();
+ $("toast").textContent=g.hammer?"Нажмите на букву, чтобы убрать её":"";
+};
+async function hammerAt(i){
+ mkSnap();g.busy=true;g.hammer=false;g.ham--;
+ burst(i,g.grid[i]);cells[i].classList.add("pop");tone(200,.15,"square",.15);vib(30);updBoost();
+ await wait(320);
+ g.grid[i]=-1;g.busy=false;$("toast").textContent="";render();
+}
+$("bShf").onclick=async()=>{
+ if(!canUse()||g.shf<=0)return;
+ mkSnap();g.shf--;g.busy=true;g.sel=-1;g.hint=null;g.hammer=false;
+ const occ=[];g.grid.forEach((v,i)=>v>=0&&occ.push(i));
+ const letters=occ.map(i=>g.grid[i]),pos=Array.from({length:T},(_,i)=>i);
+ for(let i=T-1;i>0;i--){const j=rnd(i+1);[pos[i],pos[j]]=[pos[j],pos[i]]}
+ g.grid.fill(-1);letters.forEach((l,k)=>g.grid[pos[k]]=l);
+ g.fresh=new Set(pos.slice(0,letters.length));render();updBoost();snd.spawn();$("toast").textContent="";
+ const r=findWords();if(r.found.length){await wait(300);await clear(r)}
+ g.busy=false;endCheck();
+};
+$("bUnd").onclick=()=>{
+ if(!canUse()||g.und<=0||!g.snap)return;
+ const s=g.snap;g.grid=s.grid;g.score=s.score;g.words=s.words;S.tw=s.tw;g.snap=null;g.und--;g.sel=-1;g.hint=null;g.hammer=false;
+ $("score").textContent=g.score;$("words").textContent=g.words;$("toast").textContent="";
+ updHud();render();updBoost();tone(440,.12,"triangle",.15);save();
+};
 function win(){
  g.busy=true;g.over=true;playing=false;snd.win();vib([60,40,60]);confetti();
- S.lb[g.level]=Math.max(S.lb[g.level]||0,g.score);if(g.level+1>S.unlocked)S.unlocked=g.level+1;save();
- setTimeout(()=>ov(`<h2>Уровень пройден!</h2><p>Очки: ${g.score} · слов: ${g.words}</p>`,[...(g.level<12?[["Следующий уровень",()=>{cov();begin("lvl",g.level+1)},"ok"]]:[]),["Заново",()=>begin("lvl",g.level),"alt"],["К уровням",()=>{cov();show("levels")},"alt"]]),700);
+ S.lb[g.level]=Math.max(S.lb[g.level]||0,g.score);if(g.level+1>S.unlocked)S.unlocked=Math.min(MAXL,g.level+1);save();
+ setTimeout(()=>ov(`<h2>${g.level>=MAXL?"Все уровни пройдены!":"Уровень пройден!"}</h2><p>Очки: ${g.score} · слов: ${g.words}</p>`,[...(g.level<MAXL?[["Следующий уровень",()=>{cov();begin("lvl",g.level+1)},"ok"]]:[]),["Заново",()=>begin("lvl",g.level),"alt"],["К уровням",()=>{cov();show("levels")},"alt"]]),700);
 }
 function lose(){
  g.busy=true;g.over=true;playing=false;snd.lose();vib(200);save();
