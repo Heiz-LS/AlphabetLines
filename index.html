@@ -252,7 +252,6 @@ html.desk .bst{padding:10px 2px 8px}html.desk .bst .ic{font-size:28px}
 const N=9,T=81;
 const AL="абвгдеёжзийклмнопрстуфхцчшщъыьэюя";
 const POOL=AL+"оооооеееееаааааииинннттссрррввллккммддппууыьзбгячйх";
-const BASE="армия белка берег брат буква бык век вес весна весы ветер вилка вишня вода вол волк волна воля вор время газ герой гол гора город гроза груша гусь дар двери дверь день дождь дом дочь друг дуб дым жар жизнь завод земля зима зуб ива игла игрок кит ключ книга коза ком конь кот кошка крупа крыша лампа лес лето лис лист лицо лодка ложка лом лось лук луна мак мама масло мать метро мечта мир море мороз мост мох музей мука мусор мышка мышь мясо мяч мячик небо нитка нога нос носки ночь обувь овца огонь озеро окно окунь оса осень отряд папа пар парта песня пирог поезд поле порох право птица пыль радио рак река рис ров роза рот рубль рука ручка рыбак рысь сад сахар село сила слеза слива слово слон смех снег сок соль сом сон сосна стадо сталь стена стол сумка суп сыр таз такси танец театр трава туман успех утка уха ферма хлеб цена цирк чай чашка шапка шар шарф шкаф школа шов щука экран юбка ягода яма";
 const $=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms)),rnd=n=>Math.floor(Math.random()*n),rr=(a,b)=>a+Math.random()*(b-a);
 const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 const hue=i=>(i*137.5)%360|0,st=i=>`--h:${hue(i)};--d:${[-6,0,6][i%3]}%`;
@@ -466,7 +465,6 @@ function confetti(){if(!S.anim)return;for(let i=0;i<(LITE?22:50);i++){const d=do
 /* ---- ходы ---- */
 async function clear(r){
  const ids=[...r.rm],mid=ids[ids.length>>1];
- // ОПТИМИЗАЦИЯ: Сбрасываем кэш классов у удаляемых ячеек, чтобы анимация pop не залипла
  ids.forEach(i=>{burst(i,g.grid[i]);cells[i].classList.add("pop");cells[i]._cls = null;});
  if(S.anim){const[x,y]=ctr(mid);FB.push({x,y,r:FW*.18,c:"#fff",t0:performance.now(),life:450});fxGo()}
  snd.word(r.max);vib(40);$("toast").textContent=r.found.join(", ");floatTxt("+"+r.pts,mid);
@@ -489,7 +487,6 @@ function tap(i){
  if(g.hint){g.hint=null;render()}
  if(g.hammer){if(g.grid[i]>=0)hammerAt(i);return}
  if(g.grid[i]>=0){
-   // ОПТИМИЗАЦИЯ: Отрисовываем только две ячейки (старую и новую) вместо всех 81
    const old = g.sel;
    g.sel = g.sel === i ? -1 : i;
    snd.sel();
@@ -502,17 +499,85 @@ function tap(i){
  if(!p){snd.bad();vib(80);$("toast").textContent="Путь закрыт";shake();return}
  move(p);
 }
+// НОВАЯ ОПТИМИЗИРОВАННАЯ АНИМАЦИЯ ДВИЖЕНИЯ (Без пересчета DOM-сетки)
 async function move(p){
- g.busy=true;mkSnap();$("toast").textContent="";
+ g.busy=true; mkSnap(); $("toast").textContent="";
  const oldSel = g.sel;
  g.sel=-1;
- if(oldSel>=0) renderCell(oldSel); // снимаем выделение перед движением
+ if(oldSel>=0) renderCell(oldSel);
 
- for(let k=1;k<p.length;k++){const from=p[k-1],to=p[k];g.grid[to]=g.grid[from];g.grid[from]=-1;renderCells([from,to]);snd.step();await wait(32)}
+ const start = p[0], end = p[p.length - 1];
+ const letter = g.grid[start];
+ const c1 = cells[start];
+
+ // Скрываем оригинальную букву
+ g.grid[start] = -1;
+ renderCell(start);
+
+ // Создаем летящий элемент поверх поля
+ const fly = document.createElement('i');
+ fly.className = 'lt b';
+ fly.textContent = AL[letter];
+ fly.style.cssText = `
+   position: absolute;
+   left: ${c1.offsetLeft}px;
+   top: ${c1.offsetTop}px;
+   width: ${c1.offsetWidth}px;
+   height: ${c1.offsetHeight}px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   pointer-events: none;
+   z-index: 99;
+   transition: transform 0.032s linear;
+   transform: translate(0, 0);
+   will-change: transform;
+   font-size: ${c1.offsetWidth * 0.7}px;
+   --h: ${hue(letter)};
+   --d: ${[-6,0,6][letter % 3]}%;
+ `;
+ $("bw").appendChild(fly);
+
+ // Плавный перелет по дорожке
+ for (let k = 1; k < p.length; k++) {
+   const c2 = cells[p[k]];
+   const dx = c2.offsetLeft - c1.offsetLeft;
+   const dy = c2.offsetTop - c1.offsetTop;
+   fly.style.transform = `translate(${dx}px, ${dy}px)`;
+   
+   // След (шлейф) за буквой на Canvas
+   if (S.anim) {
+     const tx = c2.offsetLeft + c2.offsetWidth / 2;
+     const ty = c2.offsetTop + c2.offsetHeight / 2;
+     FP.push({
+       x: tx, y: ty, vx: 0, vy: 0, r: c2.offsetWidth * 0.15, 
+       c: `hsl(${hue(letter)} 85% 58%)`, t0: performance.now(), life: 250
+     });
+     fxGo();
+   }
+   snd.step();
+   await wait(32);
+ }
+
+ // Финализируем позицию
+ fly.remove();
+ g.grid[end] = letter;
+ renderCell(end);
+
  let r=findWords();
- if(r.found.length)await clear(r);
- else{g.fresh=new Set(spawn(3));render();snd.spawn();r=findWords();if(r.found.length){await wait(250);await clear(r)}}
- g.busy=false;endCheck();
+ if(r.found.length) await clear(r);
+ else {
+   g.fresh = new Set(spawn(3));
+   render();
+   snd.spawn();
+   r = findWords();
+   if(r.found.length) {
+     await wait(250);
+     await clear(r);
+   }
+ }
+ g.busy = false;
+ endCheck();
 }
 function endCheck(){
  if(g.mode=="lvl"){const G=goal(g.level);if((G.t=="w"?g.words:g.score)>=G.v)return win()}
@@ -553,7 +618,7 @@ async function hammerAt(i){
  mkSnap();g.busy=true;g.hammer=false;g.ham--;
  burst(i,g.grid[i]);cells[i].classList.add("pop");cells[i]._cls = null;tone(200,.15,"square",.15);vib(30);updBoost();
  await wait(320);
- g.grid[i]=-1;g.busy=false;$("toast").textContent="";render();
+ g.grid[i]=-1;g.busy=false;$("toast").textContent="";renderCell(i);
 }
 $("bShf").onclick=async()=>{
  if(!canUse()||g.shf<=0)return;
