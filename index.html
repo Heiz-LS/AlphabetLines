@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ru"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Word-Lines</title>
+<title>Words-Lines</title>
 <style>
 :root{--ls:78%;--ll:46%;--tint:15%;--bg1:#fbf6ec;--bg2:#efe5d0;--blob1:rgba(255,170,120,.35);--blob2:rgba(120,140,255,.28);--card:#fffdf8;--card2:#f6efe0;--tile1:#f7f1e4;--tile2:#ebe2cd;--board1:#cbbd9b;--board2:#ab9b74;--ins:rgba(90,70,30,.24);--line:rgba(80,60,20,.14);--line2:rgba(80,60,20,.24);--fg:#2a2433;--mut:#8a8296;--acc:#5468f0;--acc2:#7a4fe0;--ok:#35c27a;--ok2:#1f9a55;--gl:0;color-scheme:light;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -22,9 +22,14 @@ h1{margin:0;text-align:center;font-size:clamp(34px,10.5vw,52px);font-weight:900;
 h2{margin:0;text-align:center;font-size:26px;font-weight:900}
 /* буквы: градиентная заливка */
 .lt{font-style:normal;font-weight:900;font-family:ui-rounded,"Arial Rounded MT Bold","Nunito","Trebuchet MS",system-ui,sans-serif;text-transform:uppercase;line-height:1;
-background:linear-gradient(165deg,hsl(var(--h) var(--ls) calc(var(--ll) + 15% + var(--d,0%))),hsl(calc(var(--h) + 24) var(--ls) calc(var(--ll) - 9% + var(--d,0%))));-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;
-filter:drop-shadow(0 2px 0 rgba(0,0,0,.2)) drop-shadow(0 0 calc(8px*var(--gl)) hsl(var(--h) 100% 60%))}
-.lite .lt{filter:none}
+background:linear-gradient(165deg,hsl(var(--h) var(--ls) calc(var(--ll) + 15% + var(--d,0%))),hsl(calc(var(--h) + 24) var(--ls) calc(var(--ll) - 9% + var(--d,0%))));
+-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;
+text-shadow:0 2px 0 rgba(0,0,0,.2); /* Оптимизация: text-shadow вместо filter на мобилках */}
+@media (hover:hover) and (pointer:fine){
+  .lt{ text-shadow:none;
+       filter: drop-shadow(0 2px 0 rgba(0,0,0,.2)) drop-shadow(0 0 calc(8px*var(--gl)) hsl(var(--h) 100% 60%)); }
+}
+.lite .lt{ filter:none; text-shadow: 0 2px 0 rgba(0,0,0,.2); }
 /* заливка плитки цветом буквы */
 .f,.tile{background:linear-gradient(160deg,color-mix(in oklab,hsl(var(--h) 85% 56%) var(--tint),var(--tile1)),color-mix(in oklab,hsl(calc(var(--h) + 22) 85% 50%) calc(var(--tint)*1.5),var(--tile2)))}
 /* кнопки */
@@ -64,7 +69,8 @@ background:linear-gradient(160deg,var(--acc),var(--acc2));box-shadow:0 4px 0 col
 .goal{min-height:40px;display:flex;align-items:center}
 .pgoal{position:relative;width:100%;height:30px;border-radius:15px;background:linear-gradient(180deg,var(--tile2),var(--tile1));overflow:hidden;box-shadow:inset 0 2px 4px var(--ins),inset 0 0 0 1px var(--line)}
 .pgoal i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:15px;background:linear-gradient(90deg,var(--acc),var(--acc2));box-shadow:inset 0 2px 0 rgba(255,255,255,.35);transition:width .4s}
-.pgoal span{position:relative;display:block;text-align:center;line-height:30px;font-weight:800;font-size:14px;text-shadow:0 1px 1px rgba(0,0,0,.35);color:#fff}
+/* Измененный цвет рекорда: темный шрифт со светлой обводкой */
+.pgoal span{position:relative;display:block;text-align:center;line-height:30px;font-weight:900;font-size:14px;color:var(--fg);text-shadow:0 0 4px var(--bg1), 0 0 4px var(--bg1)}
 .recp,#wl{display:none}
 #toast{order:3;min-height:26px;text-align:center;font-weight:800;color:var(--acc)}
 #gpanel{display:contents}
@@ -127,7 +133,7 @@ background:linear-gradient(180deg,var(--tile2),var(--tile1));box-shadow:inset 0 
 .rl::-webkit-scrollbar{display:none}
 .rule{display:flex;gap:12px;align-items:center;background:linear-gradient(180deg,var(--card),var(--card2));border-radius:18px;padding:11px 14px;font-weight:700;line-height:1.35;font-size:15px;box-shadow:inset 0 0 0 1px var(--line)}
 .rule i{font-style:normal;font-size:24px;flex:none;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(160deg,color-mix(in oklab,hsl(var(--h) 85% 56%) 28%,var(--tile1)),color-mix(in oklab,hsl(calc(var(--h) + 22) 85% 50%) 38%,var(--tile2)))}
-/* заставка (из Мармеладок) */
+/* заставка */
 #splash{position:fixed;inset:0;z-index:100;background:radial-gradient(circle at 50% 40%,#ffb347,#ff8a1f 55%,#ee6a00);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:34px;overflow:hidden;transition:opacity .6s,transform .6s}
 #splash.out{opacity:0;transform:scale(1.15);pointer-events:none}
 .sp-logo{font-size:min(17vw,76px);font-weight:900;color:#fff;letter-spacing:2px;display:flex;text-shadow:0 6px 0 rgba(170,70,0,.4),0 0 24px rgba(255,255,255,.4);z-index:2}
@@ -214,7 +220,7 @@ html.desk .bst{padding:10px 2px 8px}html.desk .bst .ic{font-size:28px}
  <section class="screen" id="about">
   <div class="acardw"><div class="ab-box">
    <div class="mas" id="mas2"></div>
-   <h2 class="ab-h">ОБ ИГРЕ</h2><div class="ab-sub">СЛОВА-LINES</div>
+   <h2 class="ab-h">ОБ ИГРЕ</h2><div class="ab-sub">WORDS-LINES</div>
    <p class="ab-txt">Классические Lines, только вместо шариков цветные буквы: двигайте их по полю и складывайте слова. Бесконечный режим, 100 уровней с целями и бустеры.</p>
    <div class="ab-by"><small>Игру создал</small><b>Олег Боженов</b></div>
    <div class="ab-st" id="astat"></div>
@@ -307,7 +313,7 @@ $("bPlay").onclick=()=>{snd.click();show("levels")};$("bInf").onclick=()=>{snd.c
 $("bRules").onclick=()=>{snd.click();show("rules")};$("bSet").onclick=()=>{snd.click();show("settings")};$("bAbout").onclick=()=>{snd.click();show("about")};
 function updMenu(){$("bPlay").innerHTML=`▶ Играть<small>Уровень ${Math.min(S.unlocked,MAXL)} из ${MAXL}</small>`;$("bInf").innerHTML=`∞ Бесконечный<small>рекорд ${S.best}</small>`}
 function updAbout(){$("astat").innerHTML=`<div class="alab">Ваш прогресс</div><div class="agrid"><div><b>${Object.keys(S.lb).length}/${MAXL}</b><small>уровней</small></div><div><b>${S.tw}</b><small>слов</small></div><div><b>🏆 ${S.best}</b><small>рекорд</small></div></div>`}
-$("ttl").innerHTML=[..."Слова-Lines"].map((c,i)=>`<span class="lt" style="--h:${hue(i*3+1)}">${c}</span>`).join("");
+$("ttl").innerHTML=[..."Words-Lines"].map((c,i)=>`<span class="lt" style="--h:${hue(i*3+1)}">${c}</span>`).join("");
 const mw=w=>[...w].map((c,i)=>`<i class="tile" style="${st(AL.indexOf(c))};transform:rotate(${[-4,3,-2,4,-3][i%5]}deg)"><span class="lt">${c}</span></i>`).join("");
 
 /* ---- заставка ---- */
@@ -331,11 +337,40 @@ function renderLevels(){
 let g={grid:[],score:0,words:0,sel:-1,busy:true,mode:"inf",level:0},playing=false,paused=false,recent=[];
 const cells=[];
 for(let i=0;i<T;i++){const b=document.createElement("button");b.setAttribute("aria-label","клетка");b.onclick=()=>tap(i);$("board").appendChild(b);cells.push(b)}
+// ОПТИМИЗАЦИЯ: Кэширование DOM-узлов и обновление только при изменении
 function renderCell(i){
  const c=cells[i],v=g.grid[i];
- c.style.cssText=v>=0?st(v):"";
- c.innerHTML=v>=0?`<i class="lt b">${AL[v]}</i>`:"";
- c.className=(v>=0?"f ":"")+(g.hint&&g.hint[0]===i?"hs ":"")+(g.hint&&g.hint[1]===i?"ht ":"")+(i===g.sel?"sel ":"")+(g.fresh&&g.fresh.has(i)?"new":"");
+ 
+ // 1. Управление буквой
+ if (v >= 0){
+   let L = c._L;
+   if (!L){
+     L = c._L = document.createElement('i');
+     L.className = 'lt b';
+     c.appendChild(L);
+     c._v = -1;
+   }
+   if (c._v !== v){
+     L.textContent = AL[v];
+     c.style.setProperty('--h', hue(v));
+     c.style.setProperty('--d', [-6,0,6][v % 3] + '%');
+     c._v = v;
+   }
+ } else if (c._L){
+   c._L.remove();
+   c._L = null;
+   c._v = -1;
+   c.style.removeProperty('--h');
+   c.style.removeProperty('--d');
+ }
+
+ // 2. Управление классами (только если изменились)
+ const cls = (v >= 0 ? 'f ' : '') +
+             (g.hint && g.hint[0] === i ? 'hs ' : '') +
+             (g.hint && g.hint[1] === i ? 'ht ' : '') +
+             (i === g.sel ? 'sel ' : '') +
+             (g.fresh && g.fresh.has(i) ? 'new' : '');
+ if (c._cls !== cls){ c.className = cls; c._cls = cls; }
 }
 function render(){
  for(let i=0;i<T;i++)renderCell(i);
@@ -358,6 +393,7 @@ function renderWl(){$("wl").innerHTML=recent.map(w=>`<span style="--h:${hue(AL.i
 async function begin(mode,level){
  await dictReady;
  const L=mode=="lvl";g={grid:Array(T).fill(-1),score:0,words:0,sel:-1,busy:true,mode,level,fresh:null,hint:null,hammer:false,snap:null,hints:L?3:5,ham:L?2:3,shf:L?1:2,und:L?2:3};paused=false;playing=false;
+ cells.forEach(c=>{c._L=null;c._v=-1;c._cls=null;c.innerHTML="";c.className="";c.style.cssText="";}); // полный сброс кэша при новой игре
  show("game");fxSize();g.fresh=new Set(spawn(5));render();buildHud();
  if(mode=="lvl")ov(`<h2>Уровень ${level}</h2><div class="chip">🎯 ${goalTxt(level)}</div>`,[["Старт",go]]);
  else go();
@@ -430,7 +466,8 @@ function confetti(){if(!S.anim)return;for(let i=0;i<(LITE?22:50);i++){const d=do
 /* ---- ходы ---- */
 async function clear(r){
  const ids=[...r.rm],mid=ids[ids.length>>1];
- ids.forEach(i=>{burst(i,g.grid[i]);cells[i].classList.add("pop")});
+ // ОПТИМИЗАЦИЯ: Сбрасываем кэш классов у удаляемых ячеек, чтобы анимация pop не залипла
+ ids.forEach(i=>{burst(i,g.grid[i]);cells[i].classList.add("pop");cells[i]._cls = null;});
  if(S.anim){const[x,y]=ctr(mid);FB.push({x,y,r:FW*.18,c:"#fff",t0:performance.now(),life:450});fxGo()}
  snd.word(r.max);vib(40);$("toast").textContent=r.found.join(", ");floatTxt("+"+r.pts,mid);
  recent=[...r.found,...recent].slice(0,14);renderWl();
@@ -451,14 +488,26 @@ function tap(i){
  if(g.busy||!playing||paused)return;
  if(g.hint){g.hint=null;render()}
  if(g.hammer){if(g.grid[i]>=0)hammerAt(i);return}
- if(g.grid[i]>=0){g.sel=g.sel===i?-1:i;snd.sel();render();return}
+ if(g.grid[i]>=0){
+   // ОПТИМИЗАЦИЯ: Отрисовываем только две ячейки (старую и новую) вместо всех 81
+   const old = g.sel;
+   g.sel = g.sel === i ? -1 : i;
+   snd.sel();
+   if (old >= 0) renderCell(old);
+   if (g.sel >= 0) renderCell(g.sel);
+   return;
+ }
  if(g.sel<0)return;
  const p=path(g.sel,i);
  if(!p){snd.bad();vib(80);$("toast").textContent="Путь закрыт";shake();return}
  move(p);
 }
 async function move(p){
- g.busy=true;mkSnap();$("toast").textContent="";g.sel=-1;
+ g.busy=true;mkSnap();$("toast").textContent="";
+ const oldSel = g.sel;
+ g.sel=-1;
+ if(oldSel>=0) renderCell(oldSel); // снимаем выделение перед движением
+
  for(let k=1;k<p.length;k++){const from=p[k-1],to=p[k];g.grid[to]=g.grid[from];g.grid[from]=-1;renderCells([from,to]);snd.step();await wait(32)}
  let r=findWords();
  if(r.found.length)await clear(r);
@@ -502,7 +551,7 @@ $("bHam").onclick=()=>{
 };
 async function hammerAt(i){
  mkSnap();g.busy=true;g.hammer=false;g.ham--;
- burst(i,g.grid[i]);cells[i].classList.add("pop");tone(200,.15,"square",.15);vib(30);updBoost();
+ burst(i,g.grid[i]);cells[i].classList.add("pop");cells[i]._cls = null;tone(200,.15,"square",.15);vib(30);updBoost();
  await wait(320);
  g.grid[i]=-1;g.busy=false;$("toast").textContent="";render();
 }
@@ -532,7 +581,7 @@ function lose(){
  g.busy=true;g.over=true;playing=false;snd.lose();vib(200);save();
  ov(`<h2>Поле заполнено</h2><p>Очки: ${g.score} · слов: ${g.words}</p>`,[["Заново",()=>begin(g.mode,g.level),"ok"],["В меню",()=>{cov();show("menu")},"alt"]]);
 }
-/* ---- адаптивность (перенесено из Мармеладок) ---- */
+/* ---- адаптивность ---- */
 function fit(){
  const d=document.documentElement,r=d.style,iw=innerWidth,ih=innerHeight;
  const coarse=matchMedia("(pointer:coarse)").matches,short=Math.min(screen.width||iw,screen.height||ih);
