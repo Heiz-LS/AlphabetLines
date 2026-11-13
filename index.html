@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ru"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Слова-Lines</title>
+<title>Word-Lines</title>
 <style>
 :root{--ls:78%;--ll:46%;--tint:15%;--bg1:#fbf6ec;--bg2:#efe5d0;--blob1:rgba(255,170,120,.35);--blob2:rgba(120,140,255,.28);--card:#fffdf8;--card2:#f6efe0;--tile1:#f7f1e4;--tile2:#ebe2cd;--board1:#cbbd9b;--board2:#ab9b74;--ins:rgba(90,70,30,.24);--line:rgba(80,60,20,.14);--line2:rgba(80,60,20,.24);--fg:#2a2433;--mut:#8a8296;--acc:#5468f0;--acc2:#7a4fe0;--ok:#35c27a;--ok2:#1f9a55;--gl:0;color-scheme:light;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -155,11 +155,11 @@ html:not(.desk) #bwrap{flex:0 1 auto;width:100%;aspect-ratio:1/1;min-height:0;al
 @media (max-height:700px){.tile{width:min(13vw,58px);font-size:min(9vw,40px)}#menu{gap:12px}.big{padding:14px}}
 @media (max-height:720px) and (max-aspect-ratio:6/5){.round{width:44px;height:44px}.box b{font-size:20px}.box small{font-size:9px}.goal{min-height:34px}#game{gap:6px;padding:8px 0}}
 /* ПК и планшет */
-html.desk #app{position:absolute;left:50%;top:50%;width:var(--sw,1280px);height:720px;transform:translate(-50%,-50%) scale(var(--sc,1))}
+html.desk #app{position:absolute;left:50%;top:50%;width:var(--sw,1320px);height:720px;transform:translate(-50%,-50%) scale(var(--sc,1))}
 html.desk #game{flex-direction:row;align-items:center;justify-content:center;gap:40px;padding:0}
 html.desk #gpanel{display:flex;flex-direction:column;flex:none;width:380px;height:680px;gap:12px;padding:18px;border-radius:30px;background:linear-gradient(180deg,var(--card),var(--card2));box-shadow:0 16px 36px -10px rgba(0,0,0,.4),inset 0 0 0 1px var(--line2)}
 html.desk #bwrap{flex:none;width:680px;height:680px}
-html.desk .screen:not(#game){left:calc(50% - 320px);right:auto;width:640px}
+html.desk .screen:not(#game){left:calc(50% - 360px);right:auto;width:720px}
 html.desk .lvgrid{grid-template-columns:repeat(5,1fr)}
 html.desk .recp{display:flex;align-items:center;gap:12px;padding:8px 14px}
 html.desk .recp small{display:block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--mut)}html.desk .recp b{font-size:26px}
@@ -167,6 +167,10 @@ html.desk #wl{display:flex;flex-wrap:wrap;align-content:flex-start;gap:6px;flex:
 #wl span{padding:3px 11px;border-radius:12px;font-weight:900;font-size:16px;text-transform:uppercase;color:hsl(var(--h) var(--ls) var(--ll));background:color-mix(in oklab,hsl(var(--h) 85% 56%) 16%,var(--tile1));box-shadow:inset 0 0 0 1px var(--line)}
 html.desk #toast{order:0}
 html.desk #card{transform:scale(var(--sc,1))}
+html.desk #about .acardw{width:min(100%,480px)}
+html.desk #about .ab-box{padding:22px 26px 24px;gap:14px}
+html.desk #menu .menubtns{width:min(100%,380px);gap:16px}
+html.desk #menu .btn.big{padding:20px;font-size:28px}
 /* бустеры */
 #boost{order:2;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%;max-width:504px;align-self:center;padding-top:6px}
 .bst{position:relative;border:0;border-radius:16px;padding:8px 2px 6px;font:inherit;color:var(--fg);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;background:linear-gradient(180deg,var(--card),var(--card2));box-shadow:0 3px 0 var(--line2),inset 0 0 0 1px var(--line)}
@@ -305,7 +309,7 @@ function updMenu(){$("bPlay").innerHTML=`▶ Играть<small>Уровень $
 function updAbout(){$("astat").innerHTML=`<div class="alab">Ваш прогресс</div><div class="agrid"><div><b>${Object.keys(S.lb).length}/${MAXL}</b><small>уровней</small></div><div><b>${S.tw}</b><small>слов</small></div><div><b>🏆 ${S.best}</b><small>рекорд</small></div></div>`}
 $("ttl").innerHTML=[..."Слова-Lines"].map((c,i)=>`<span class="lt" style="--h:${hue(i*3+1)}">${c}</span>`).join("");
 const mw=w=>[...w].map((c,i)=>`<i class="tile" style="${st(AL.indexOf(c))};transform:rotate(${[-4,3,-2,4,-3][i%5]}deg)"><span class="lt">${c}</span></i>`).join("");
-$("mas").innerHTML=mw("слово");$("mas2").innerHTML=mw("игра");
+
 /* ---- заставка ---- */
 $("spl").innerHTML=[..."Bojenov"].map((c,i)=>`<span style="--i:${i}">${c}</span>`).join("");
 $("spb").innerHTML=Array.from({length:16},()=>{const z=20+rnd(60);return `<div class="sp-b" style="width:${z}px;height:${z}px;left:${rnd(96)}%;animation-duration:${4+rnd(5)}s;animation-delay:${-rnd(6)}s"></div>`}).join("");
@@ -327,9 +331,18 @@ function renderLevels(){
 let g={grid:[],score:0,words:0,sel:-1,busy:true,mode:"inf",level:0},playing=false,paused=false,recent=[];
 const cells=[];
 for(let i=0;i<T;i++){const b=document.createElement("button");b.setAttribute("aria-label","клетка");b.onclick=()=>tap(i);$("board").appendChild(b);cells.push(b)}
+function renderCell(i){
+ const c=cells[i],v=g.grid[i];
+ c.style.cssText=v>=0?st(v):"";
+ c.innerHTML=v>=0?`<i class="lt b">${AL[v]}</i>`:"";
+ c.className=(v>=0?"f ":"")+(g.hint&&g.hint[0]===i?"hs ":"")+(g.hint&&g.hint[1]===i?"ht ":"")+(i===g.sel?"sel ":"")+(g.fresh&&g.fresh.has(i)?"new":"");
+}
 function render(){
- cells.forEach((c,i)=>{const v=g.grid[i];c.style.cssText=v>=0?st(v):"";c.innerHTML=v>=0?`<i class="lt b">${AL[v]}</i>`:"";c.className=(v>=0?"f ":"")+(g.hint&&g.hint[0]===i?"hs ":"")+(g.hint&&g.hint[1]===i?"ht ":"")+(i===g.sel?"sel ":"")+(g.fresh&&g.fresh.has(i)?"new":"")});
+ for(let i=0;i<T;i++)renderCell(i);
  g.fresh=null;
+}
+function renderCells(ids){
+ for(const i of ids)renderCell(i);
 }
 function bump(id,v){const e=$(id);e.textContent=v;e.classList.remove("bump");e.offsetWidth;e.classList.add("bump")}
 function buildHud(){
@@ -392,7 +405,7 @@ function findWords(){
 }
 /* ---- эффекты на canvas ---- */
 const fxc=$("fx"),fxx=fxc.getContext("2d");let FP=[],FB=[],fraf=0,DPR=1,FW=1,SCL=1,DESK=false;
-function fxSize(){DPR=Math.min((window.devicePixelRatio||1)*SCL,3);FW=$("bw").clientWidth||1;fxc.width=FW*DPR;fxc.height=FW*DPR}
+function fxSize(){DPR=Math.min((window.devicePixelRatio||1)*SCL,2);FW=$("bw").clientWidth||1;fxc.width=FW*DPR;fxc.height=FW*DPR}
 if(window.ResizeObserver)new ResizeObserver(fxSize).observe($("bw"));
 const fxGo=()=>{if(!fraf)fraf=requestAnimationFrame(fxLoop)};
 function fxBurst(x,y,col,n,sp=1,delay=0){
@@ -446,7 +459,7 @@ function tap(i){
 }
 async function move(p){
  g.busy=true;mkSnap();$("toast").textContent="";g.sel=-1;
- for(let k=1;k<p.length;k++){g.grid[p[k]]=g.grid[p[k-1]];g.grid[p[k-1]]=-1;render();snd.step();await wait(32)}
+ for(let k=1;k<p.length;k++){const from=p[k-1],to=p[k];g.grid[to]=g.grid[from];g.grid[from]=-1;renderCells([from,to]);snd.step();await wait(32)}
  let r=findWords();
  if(r.found.length)await clear(r);
  else{g.fresh=new Set(spawn(3));render();snd.spawn();r=findWords();if(r.found.length){await wait(250);await clear(r)}}
@@ -528,7 +541,7 @@ function fit(){
  d.classList.toggle("tab",tab);d.classList.toggle("desk",DESK);d.classList.toggle("pc",DESK&&!coarse);
  const was=d.classList.contains("rotT"),rt=tab&&!land;d.classList.toggle("rotT",rt);
  if(rt&&!was)pauseMenu();
- if(DESK){const h=720,M=60,minW=1100+2*M,w=Math.min(Math.max(iw/ih*h,minW),1800);SCL=Math.min(iw/w,ih/h);r.setProperty("--sw",w+"px")}
+ if(DESK){const h=720,M=60,minW=1320,w=Math.min(Math.max(iw/ih*h,minW),1800);SCL=Math.min(iw/w,ih/h);r.setProperty("--sw",w+"px")}
  else{SCL=1;r.setProperty("--sw","auto")}
  r.setProperty("--sc",SCL);fxSize();
 }
