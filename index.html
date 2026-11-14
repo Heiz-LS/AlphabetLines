@@ -275,6 +275,8 @@ const wait=ms=>new Promise(r=>setTimeout(r,S.anim?ms:0));
 /* ---- словарь ---- */
 let W=[],WI=[],D=new Set();
 function setDict(a){const r=/^[а-яё]{3,5}$/;W=[...new Set(a.map(x=>String(x).toLowerCase()).filter(x=>r.test(x)))];D=new Set(W);WI=W.map(w=>[...w].map(c=>AL.indexOf(c)))}
+// Резервный словарь для запуска без внешнего words.js / words.json.
+const BASE = `кот дом лес мир сон нос рот год час шар сыр рак мак лук сок кит ток бак бок бой май чай рай сад дуб мяч дым ход лёд лёд ёжик зима лето море поле река рука нога гора игра вода вино окно кино день ночь снег дождь ветер берег город слово буква книга школа ручка доска парта класс урок ответ вопрос номер экран файл кодер робот поезд вагон мотор колёс колесо адрес центр спорт тенис теннис мячик матч сетка корт удар ракет ракетка линия песок волна свет цвет масло сахар тесто хлеб пирог супы груша слива лимон банан яблок яблоко ягода трава ветка лист листа цветы кусты сосна ёлка ствол реки ручей остров карта страна мирок герой друг дружба семья мама папа дочка сынок брат сестра кошка собака мышка птица рыба акула тигр зебра лиса волк медведь зайка утка гусь петух курица муха пчела жук паук крот слон конь кони коза овца бобр ёжик игла нитка ткань шапка обувь сапог носок рукав куртка платье шарф дверь крыша стена полка стол стул диван лампа свеча часы день утро вечер ночь среда пятно пятка пятак палка палец кулак ладонь лицо глаза глаз ухо уши носик зубы зубок ротик щека язык голос звук песня танец нота радио театр сцена кино фильм экран кадр автор роман сказка текст тема мысль умник успех сила огонь вода воздух земля космос звезда луна месяц солнце лучик небо облак туча дождь гроза мороз холод тепло жара весна осень зима лето месяц апрель март июнь июль август январь сутки время дата число цифра сумма рубль цена товар рынок заказ пакет сумка короб ящик ключ замок врата вход выход лево право верх низко назад перед после рядом между вдоль опять всегда тогда позже скоро снова резко тихо гром шаги бегом бегун ходок игрок игра ход ходи поле доска фишка линия слово слова буквы звуки точка пауза старт финиш призы бонус очки баллы победа ничья раунд серия рывок шанс удача риск выбор задача цель опыт навык метод логик логика поиск ходик след следы путь пути мост берег рынок поток дверь`.split(/\s+/).filter(x=>x.length>=3&&x.length<=5);
 let dictSrc="встроенный";
 async function loadDict(){
  if(Array.isArray(window.WORDS)){setDict(window.WORDS);if(W.length>=20)dictSrc="words.js"}
@@ -287,7 +289,7 @@ let closable=false;
 function ov(h,btns,cl){closable=!!cl;const c=$("card");c.innerHTML=h;btns.forEach(([t,f,k])=>{const b=document.createElement("button");b.className="btn "+(k||"");b.textContent=t;b.onclick=()=>{snd.click();f()};c.appendChild(b)});$("ov").classList.remove("hidden")}
 const cov=()=>$("ov").classList.add("hidden");
 $("ov").addEventListener("click",e=>{if(e.target.id=="ov"&&closable&&paused)resume()});
-const RULES=[["👆","Нажмите на букву, затем на свободную клетку: буква пройдёт туда по свободному пути (по горизонтали и вертикали)."],["🔤","Выстройте слово из 5–8 букв в строку (слева направо) или в столбец (сверху вниз): буквы исчезнут и принесут очки."],["⭐","Очки за слово: длина² × 2. Собрали слово: новые буквы не появляются. Нет слова: добавляются три новые."],["🧠","Когда на поле больше 10 букв, игра следит, чтобы из них можно было составить хотя бы несколько слов."],["🎯","В уровнях нужно выполнить цель: собрать N слов или набрать N очков. В бесконечном режиме играйте ради рекорда."],["🛠️","Бустеры: 💡 подсказка покажет ход со словом, 🔨 молоток убирает одну букву, 🔀 перемешать переставляет буквы, ↩️ отмена возвращает последнее действие. Их число ограничено."],["💥","Игра заканчивается, когда поле заполнено."]];
+const RULES=[["👆","Нажмите на букву, затем на свободную клетку: буква пройдёт туда по свободному пути (по горизонтали и вертикали)."],["🔤","Выстройте слово из 3–5 букв в строку (слева направо) или в столбец (сверху вниз): буквы исчезнут и принесут очки."],["⭐","Очки за слово: длина² × 2. Собрали слово: новые буквы не появляются. Нет слова: добавляются три новые."],["🧠","Первые пять букв всегда содержат слово. Новые буквы подбираются с учётом словаря."],["🎯","В уровнях нужно выполнить цель: собрать N слов или набрать N очков. В бесконечном режиме играйте ради рекорда."],["🛠️","Бустеры: 💡 подсказка покажет готовый ход или до трёх доступных слов, 🔨 молоток убирает одну букву, 🔀 перемешать создаёт почти готовое слово, ↩️ отмена возвращает последнее действие. Их число ограничено."],["💥","Игра заканчивается, когда поле заполнено."]];
 const rulesHTML=()=>RULES.map(([e,t],k)=>`<div class="rule"><i style="--h:${hue(k*4+3)}">${e}</i><span>${t}</span></div>`).join("");
 $("rl").innerHTML=rulesHTML();
 const swRow=(ic,l,k)=>`<div class="srow"><span>${ic} ${l}</span><label class="sw"><input type="checkbox" data-k="${k}" ${S[k]?"checked":""}><i></i></label></div>`;
@@ -366,6 +368,7 @@ function renderCell(i){
  // 2. Управление классами (только если изменились)
  const cls = (v >= 0 ? 'f ' : '') +
              (g.hint && g.hint[0] === i ? 'hs ' : '') +
+              (g.hintLetters && g.hintLetters.includes(i) ? 'hs ' : '') +
              (g.hint && g.hint[1] === i ? 'ht ' : '') +
              (i === g.sel ? 'sel ' : '') +
              (g.fresh && g.fresh.has(i) ? 'new' : '');
@@ -411,20 +414,66 @@ function ovSet(){
 $("bPause").onclick=pauseMenu;
 /* ---- генерация букв ---- */
 function formable(c,need){let f=0;for(const w of WI){const t=c.slice();let ok=true;for(const i of w){if(--t[i]<0){ok=false;break}}if(ok&&++f>=need)return true}return false}
-function spawn(k){
- const empty=[];g.grid.forEach((v,i)=>v<0&&empty.push(i));empty.sort(()=>Math.random()-.5);k=Math.min(k,empty.length);
- const rn=()=>AL.indexOf(POOL[Math.random()*POOL.length|0]);
- const cnt=Array(33).fill(0);let total=0;g.grid.forEach(v=>{if(v>=0){cnt[v]++;total++}});
- let add=Array.from({length:k},rn);
- if(total+k>10){
-  let ok=false;
-  for(let t=0;t<25&&!ok;t++){const c=cnt.slice();add.forEach(a=>c[a]++);if(formable(c,3))ok=true;else add=add.map(rn)}
-  if(!ok){let best=[],bm=99;
-   for(let t=0;t<400&&bm>0;t++){const w=WI[Math.random()*WI.length|0],need=cnt.slice(),miss=[];for(const i of w){if(need[i]>0)need[i]--;else miss.push(i)}if(miss.length<bm){bm=miss.length;best=miss}}
-   best.slice(0,k).forEach((l,i)=>add[i]=l)}
- }
- add.forEach((l,i)=>g.grid[empty[i]]=l);return empty.slice(0,k);
+function inventory(grid=g.grid){
+ const c=Array(AL.length).fill(0);
+ grid.forEach(v=>{if(v>=0)c[v]++});return c;
 }
+function wordFits(w,c){
+ const t=c.slice();for(const v of w){if(--t[v]<0)return false}return true;
+}
+function availableWords(grid=g.grid,limit=3){
+ const c=inventory(grid),found=[];
+ // Сначала длинные слова: более убедительная и полезная подсказка.
+ for(const len of [5,4,3]){
+  for(let i=0;i<WI.length;i++)if(WI[i].length===len&&wordFits(WI[i],c)){
+   found.push(W[i]);if(found.length>=limit)return found;
+  }
+ }
+ return found;
+}
+function closestWord(c,preferred=5){
+ let best=null,missing=Infinity;
+ for(let t=0;t<WI.length;t++){
+  const w=WI[t],temp=c.slice(),miss=[];
+  for(const ch of w){if(temp[ch]>0)temp[ch]--;else miss.push(ch)}
+  const score=miss.length*10+(preferred-w.length);
+  if(w.length<=preferred&&score<missing){missing=score;best={word:w,missing:miss,text:W[t]}}
+ }
+ return best;
+}
+function spawn(k){
+ const empty=[];g.grid.forEach((v,i)=>v<0&&empty.push(i));
+ // Fisher–Yates вместо sort с некорректным случайным компаратором.
+ for(let i=empty.length-1;i>0;i--){const j=rnd(i+1);[empty[i],empty[j]]=[empty[j],empty[i]]}
+ k=Math.min(k,empty.length);
+ const rn=()=>AL.indexOf(POOL[rnd(POOL.length)]);
+ const cnt=inventory(),total=g.grid.filter(v=>v>=0).length;
+ let add=Array.from({length:k},rn);
+ if(total===0&&k>=5&&WI.length){
+  // Гарантированное стартовое слово ровно из доступных пяти плиток.
+  const candidates=WI.filter(w=>w.length===5);
+  const word=(candidates.length?candidates:WI.filter(w=>w.length<=5))[rnd(candidates.length||WI.filter(w=>w.length<=5).length)];
+  if(word){word.forEach((ch,i)=>add[i]=ch)}
+ }else if(total+k>=5&&WI.length){
+  // Генерация намеренно тяготеет к словам, а не к бессмысленному набору.
+  const composed=cnt.slice();add.forEach(ch=>composed[ch]++);
+  const needed=total+k>=11?3:1;
+  if(!formable(composed,needed)){
+   for(let i=0;i<65;i++){
+    const fresh=Array.from({length:k},rn),c=cnt.slice();fresh.forEach(ch=>c[ch]++);
+    if(formable(c,needed)){add=fresh;break}
+   }
+   let c=cnt.slice();add.forEach(ch=>c[ch]++);
+   if(!formable(c,1)){
+    const target=closestWord(cnt,Math.min(5,total+k));
+    if(target&&target.missing.length<=k)target.missing.forEach((ch,i)=>add[i]=ch);
+   }
+  }
+ }
+ add.forEach((l,i)=>g.grid[empty[i]]=l);
+ return empty.slice(0,k);
+}
+
 const LINES=[];for(let a=0;a<N;a++){LINES.push(Array.from({length:N},(_,c)=>a*N+c));LINES.push(Array.from({length:N},(_,r)=>r*N+a))}
 function findWords(){
  const rm=new Set(),found=[];let pts=0;
@@ -484,7 +533,7 @@ function path(a,b){
 }
 function tap(i){
  if(g.busy||!playing||paused)return;
- if(g.hint){g.hint=null;render()}
+ if(g.hint||g.hintLetters){g.hint=null;g.hintLetters=null;render()}
  if(g.hammer){if(g.grid[i]>=0)hammerAt(i);return}
  if(g.grid[i]>=0){
    const old = g.sel;
@@ -602,16 +651,33 @@ function findHint(){
   for(const b of reach(a)){g.grid[b]=g.grid[a];g.grid[a]=-1;const r=findWords();g.grid[a]=g.grid[b];g.grid[b]=-1;if(r.pts>bp){bp=r.pts;best=[a,b,r.found[0]]}}}
  return best;
 }
+function positionsForWord(word){
+ const cnt=new Map(),indexes=[];
+ for(let i=0;i<T;i++)if(g.grid[i]>=0){const ch=AL[g.grid[i]];if(!cnt.has(ch))cnt.set(ch,[]);cnt.get(ch).push(i)}
+ for(const ch of word){const loc=cnt.get(ch);if(!loc||!loc.length)return [];indexes.push(loc.shift())}
+ return indexes;
+}
 $("bHint").onclick=()=>{
  if(!canUse()||g.hints<=0)return;
- const h=findHint();
- if(!h){$("toast").textContent="Ходов со словом нет — попробуйте «Перемешать»";return}
- g.hints--;g.hammer=false;g.sel=-1;g.hint=[h[0],h[1]];render();updBoost();tone(880,.12,"triangle",.15);
- $("toast").textContent="Подсказка: слово «"+h[2]+"»";
+ const h=findHint(),words=availableWords(g.grid,3);
+ if(!h&&!words.length){
+  $("toast").textContent="Сейчас нужных букв нет. Используйте 🔀 — оно подготовит слово";
+  snd.bad();return;
+ }
+ g.hints--;g.hammer=false;g.sel=-1;g.hint=null;g.hintLetters=null;
+ if(h){
+  g.hint=[h[0],h[1]];
+  $("toast").textContent="Готовый ход: «"+h[2]+"» · подсвечены буква и цель";
+ }else{
+  g.hintLetters=positionsForWord(words[0]);
+  $("toast").textContent="Из этих букв: "+words.map(w=>"«"+w+"»").join(", ")+" · соберите на линии";
+ }
+ render();updBoost();tone(880,.12,"triangle",.15);
 };
+
 $("bHam").onclick=()=>{
  if(!canUse()||g.ham<=0)return;
- g.hammer=!g.hammer;g.sel=-1;g.hint=null;render();updBoost();snd.click();
+ g.hammer=!g.hammer;g.sel=-1;g.hint=null;g.hintLetters=null;render();updBoost();snd.click();
  $("toast").textContent=g.hammer?"Нажмите на букву, чтобы убрать её":"";
 };
 async function hammerAt(i){
@@ -620,20 +686,58 @@ async function hammerAt(i){
  await wait(320);
  g.grid[i]=-1;g.busy=false;$("toast").textContent="";renderCell(i);
 }
+function smartShuffle(){
+ const letters=g.grid.filter(v=>v>=0),count=letters.length;
+ let word=availableWords(g.grid,1)[0];
+ let changed=0;
+ if(!word){
+  // При отсутствии подходящих букв минимально исправляем состав.
+  const match=closestWord(inventory(),Math.min(5,count));
+  if(match&&match.word.length<=count){
+   const need=match.word.slice(),left=letters.slice();
+   for(const ch of need){const i=left.indexOf(ch);if(i>=0)left.splice(i,1)}
+   changed=match.missing.length;
+   letters.length=0;letters.push(...match.word,...left.slice(0,count-match.word.length));
+   word=match.text;
+  }
+ }
+ if(!word){ // Защита при слишком маленьком словаре или менее трёх букв.
+  const pos=Array.from({length:T},(_,i)=>i);
+  for(let i=T-1;i>0;i--){const j=rnd(i+1);[pos[i],pos[j]]=[pos[j],pos[i]]}
+  g.grid.fill(-1);letters.forEach((v,i)=>g.grid[pos[i]]=v);
+  return{changed,word:null,positions:pos.slice(0,count)};
+ }
+ // Строим почти готовую линию: одна буква в соседней клетке,
+ // целевая клетка свободна, путь для перемещения открыт.
+ const ids=WI[W.indexOf(word)],remaining=letters.slice();
+ for(const ch of ids){const i=remaining.indexOf(ch);if(i>=0)remaining.splice(i,1)}
+ const row=3+rnd(2),col=rnd(10-ids.length),target=row*N+col+ids.length-1;
+ const source=(row+1)*N+col+ids.length-1;
+ g.grid.fill(-1);
+ const placed=[];
+ for(let i=0;i<ids.length-1;i++){const idx=row*N+col+i;g.grid[idx]=ids[i];placed.push(idx)}
+ g.grid[source]=ids[ids.length-1];placed.push(source);
+ const other=[];for(let i=0;i<T;i++)if(g.grid[i]<0&&i!==target)other.push(i);
+ for(let i=other.length-1;i>0;i--){const j=rnd(i+1);[other[i],other[j]]=[other[j],other[i]]}
+ remaining.forEach((v,i)=>{if(i<other.length){g.grid[other[i]]=v;placed.push(other[i])}});
+ g.hint=[source,target];
+ return{changed,word,positions:placed};
+}
 $("bShf").onclick=async()=>{
  if(!canUse()||g.shf<=0)return;
- mkSnap();g.shf--;g.busy=true;g.sel=-1;g.hint=null;g.hammer=false;
- const occ=[];g.grid.forEach((v,i)=>v>=0&&occ.push(i));
- const letters=occ.map(i=>g.grid[i]),pos=Array.from({length:T},(_,i)=>i);
- for(let i=T-1;i>0;i--){const j=rnd(i+1);[pos[i],pos[j]]=[pos[j],pos[i]]}
- g.grid.fill(-1);letters.forEach((l,k)=>g.grid[pos[k]]=l);
- g.fresh=new Set(pos.slice(0,letters.length));render();updBoost();snd.spawn();$("toast").textContent="";
+ mkSnap();g.shf--;g.busy=true;g.sel=-1;g.hint=null;g.hintLetters=null;g.hammer=false;
+ const result=smartShuffle();g.fresh=new Set(result.positions);
+ render();updBoost();snd.spawn();
+ $("toast").textContent=result.word
+  ?"🔀 Слово «"+result.word+"» почти собрано!"+(result.changed?" · заменено букв: "+result.changed:"")
+  :"Буквы перемешаны";
  const r=findWords();if(r.found.length){await wait(300);await clear(r)}
  g.busy=false;endCheck();
 };
+
 $("bUnd").onclick=()=>{
  if(!canUse()||g.und<=0||!g.snap)return;
- const s=g.snap;g.grid=s.grid;g.score=s.score;g.words=s.words;S.tw=s.tw;g.snap=null;g.und--;g.sel=-1;g.hint=null;g.hammer=false;
+ const s=g.snap;g.grid=s.grid;g.score=s.score;g.words=s.words;S.tw=s.tw;g.snap=null;g.und--;g.sel=-1;g.hint=null;g.hintLetters=null;g.hammer=false;
  $("score").textContent=g.score;$("words").textContent=g.words;$("toast").textContent="";
  updHud();render();updBoost();tone(440,.12,"triangle",.15);save();
 };
