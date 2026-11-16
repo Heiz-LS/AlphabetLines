@@ -92,6 +92,10 @@ background:linear-gradient(180deg,var(--tile2),var(--tile1));box-shadow:inset 0 
 @keyframes pin{from{transform:scale(0)}}
 @keyframes pop{40%{transform:scale(1.4);filter:brightness(1.4)}to{transform:scale(0);opacity:0}}
 #fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:6}
+#flylayer{position:absolute;inset:0;overflow:visible;pointer-events:none;z-index:8;contain:layout paint}
+#flylayer .fly{position:absolute;left:0;top:0;display:flex;align-items:center;justify-content:center;pointer-events:none;will-change:transform;filter:drop-shadow(0 4px 5px rgba(0,0,0,.35))}
+.trail-dot{position:absolute;width:13px;height:13px;border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);background:radial-gradient(circle,hsl(var(--h) 95% 72%/.42) 0%,hsl(var(--h) 90% 62%/.16) 48%,transparent 76%);box-shadow:0 0 7px hsl(var(--h) 95% 65%/.16);animation:trailFade .42s ease-out forwards;will-change:opacity,transform}
+@keyframes trailFade{0%{opacity:.48;transform:translate(-50%,-50%) scale(.9)}100%{opacity:0;transform:translate(-50%,-50%) scale(.42)}}
 .fl{position:absolute;left:50%;top:40%;font-size:32px;font-weight:900;color:#fff;-webkit-text-stroke:0;text-shadow:0 2px 0 var(--acc2),0 0 12px var(--acc);pointer-events:none;z-index:7;animation:flt .9s forwards}
 @keyframes flt{from{transform:translate(-50%,0)}to{transform:translate(-50%,-70px);opacity:0}}
 .cf{position:fixed;top:-20px;width:10px;height:16px;border-radius:3px;z-index:60;pointer-events:none;animation:cf var(--t) linear forwards}
@@ -242,7 +246,7 @@ html.desk .bst{padding:10px 2px 8px}html.desk .bst .ic{font-size:28px}
    </div>
    <div id="toast"></div>
   </div>
-  <div id="bwrap"><div id="bw"><div id="board"></div><canvas id="fx"></canvas></div></div>
+  <div id="bwrap"><div id="bw"><div id="board"></div><canvas id="fx"></canvas><div id="flylayer"></div></div></div>
  </section>
 </div>
 <div id="rot"><div class="ph"></div><div><span class="rp">Играйте в вертикальном положении</span><span class="rt">Играйте в горизонтальном положении</span></div><small style="opacity:.8;font-weight:700"><span class="rp">Поверните телефон</span><span class="rt">Поверните планшет горизонтально</span></small></div>
@@ -258,8 +262,9 @@ const hue=i=>(i*137.5)%360|0,st=i=>`--h:${hue(i)};--d:${[-6,0,6][i%3]}%`;
 const LITE=(navigator.hardwareConcurrency||8)<=4||(navigator.deviceMemory||8)<=2;
 document.body.classList.toggle("lite",LITE);
 /* ---- сохранение и настройки ---- */
-let S={snd:1,vol:.7,vib:1,anim:matchMedia("(prefers-reduced-motion: reduce)").matches?0:1,theme:"auto",unlocked:+ls.get("wl_lv")||1,best:+ls.get("wl_best")||0,lb:{},tw:0};
+let S={snd:1,vol:.7,vib:1,anim:matchMedia("(prefers-reduced-motion: reduce)").matches?0:1,theme:"auto",spawn:2,unlocked:+ls.get("wl_lv")||1,best:+ls.get("wl_best")||0,lb:{},tw:0};
 try{Object.assign(S,JSON.parse(ls.get("wl_save")||"{}"))}catch(e){}if(!["auto","light","dark"].includes(S.theme))S.theme="auto";
+S.spawn=[1,2,3].includes(+S.spawn)?+S.spawn:2;
 const save=()=>ls.set("wl_save",JSON.stringify(S));
 const THEMES={auto:"Авто",light:"Светлая",dark:"Ночь"};
 function applySettings(){const r=document.documentElement;S.theme=="auto"?r.removeAttribute("data-theme"):r.dataset.theme=S.theme;r.classList.toggle("noanim",!S.anim)}
@@ -274,9 +279,10 @@ const vib=ms=>{if(S.vib&&navigator.vibrate)try{navigator.vibrate(ms)}catch(e){}}
 const wait=ms=>new Promise(r=>setTimeout(r,S.anim?ms:0));
 /* ---- словарь ---- */
 let W=[],WI=[],D=new Set();
-function setDict(a){const r=/^[а-яё]{3,5}$/;W=[...new Set(a.map(x=>String(x).toLowerCase()).filter(x=>r.test(x)))];D=new Set(W);WI=W.map(w=>[...w].map(c=>AL.indexOf(c)))}
+const MIN_WORD_LENGTH=4,MAX_WORD_LENGTH=6;
+function setDict(a){const r=/^[а-яё]{4,6}$/;W=[...new Set(a.map(x=>String(x).trim().toLowerCase()).filter(x=>r.test(x)))];D=new Set(W);WI=W.map(w=>[...w].map(c=>AL.indexOf(c)))}
 // Резервный словарь для запуска без внешнего words.js / words.json.
-const BASE = `кот дом лес мир сон нос рот год час шар сыр рак мак лук сок кит ток бак бок бой май чай рай сад дуб мяч дым ход лёд лёд ёжик зима лето море поле река рука нога гора игра вода вино окно кино день ночь снег дождь ветер берег город слово буква книга школа ручка доска парта класс урок ответ вопрос номер экран файл кодер робот поезд вагон мотор колёс колесо адрес центр спорт тенис теннис мячик матч сетка корт удар ракет ракетка линия песок волна свет цвет масло сахар тесто хлеб пирог супы груша слива лимон банан яблок яблоко ягода трава ветка лист листа цветы кусты сосна ёлка ствол реки ручей остров карта страна мирок герой друг дружба семья мама папа дочка сынок брат сестра кошка собака мышка птица рыба акула тигр зебра лиса волк медведь зайка утка гусь петух курица муха пчела жук паук крот слон конь кони коза овца бобр ёжик игла нитка ткань шапка обувь сапог носок рукав куртка платье шарф дверь крыша стена полка стол стул диван лампа свеча часы день утро вечер ночь среда пятно пятка пятак палка палец кулак ладонь лицо глаза глаз ухо уши носик зубы зубок ротик щека язык голос звук песня танец нота радио театр сцена кино фильм экран кадр автор роман сказка текст тема мысль умник успех сила огонь вода воздух земля космос звезда луна месяц солнце лучик небо облак туча дождь гроза мороз холод тепло жара весна осень зима лето месяц апрель март июнь июль август январь сутки время дата число цифра сумма рубль цена товар рынок заказ пакет сумка короб ящик ключ замок врата вход выход лево право верх низко назад перед после рядом между вдоль опять всегда тогда позже скоро снова резко тихо гром шаги бегом бегун ходок игрок игра ход ходи поле доска фишка линия слово слова буквы звуки точка пауза старт финиш призы бонус очки баллы победа ничья раунд серия рывок шанс удача риск выбор задача цель опыт навык метод логик логика поиск ходик след следы путь пути мост берег рынок поток дверь`.split(/\s+/).filter(x=>x.length>=3&&x.length<=5);
+const BASE = `кот дом лес мир сон нос рот год час шар сыр рак мак лук сок кит ток бак бок бой май чай рай сад дуб мяч дым ход лёд лёд ёжик зима лето море поле река рука нога гора игра вода вино окно кино день ночь снег дождь ветер берег город слово буква книга школа ручка доска парта класс урок ответ вопрос номер экран файл кодер робот поезд вагон мотор колёс колесо адрес центр спорт тенис теннис мячик матч сетка корт удар ракет ракетка линия песок волна свет цвет масло сахар тесто хлеб пирог супы груша слива лимон банан яблок яблоко ягода трава ветка лист листа цветы кусты сосна ёлка ствол реки ручей остров карта страна мирок герой друг дружба семья мама папа дочка сынок брат сестра кошка собака мышка птица рыба акула тигр зебра лиса волк медведь зайка утка гусь петух курица муха пчела жук паук крот слон конь кони коза овца бобр ёжик игла нитка ткань шапка обувь сапог носок рукав куртка платье шарф дверь крыша стена полка стол стул диван лампа свеча часы день утро вечер ночь среда пятно пятка пятак палка палец кулак ладонь лицо глаза глаз ухо уши носик зубы зубок ротик щека язык голос звук песня танец нота радио театр сцена кино фильм экран кадр автор роман сказка текст тема мысль умник успех сила огонь вода воздух земля космос звезда луна месяц солнце лучик небо облак туча дождь гроза мороз холод тепло жара весна осень зима лето месяц апрель март июнь июль август январь сутки время дата число цифра сумма рубль цена товар рынок заказ пакет сумка короб ящик ключ замок врата вход выход лево право верх низко назад перед после рядом между вдоль опять всегда тогда позже скоро снова резко тихо гром шаги бегом бегун ходок игрок игра ход ходи поле доска фишка линия слово слова буквы звуки точка пауза старт финиш призы бонус очки баллы победа ничья раунд серия рывок шанс удача риск выбор задача цель опыт навык метод логик логика поиск ходик след следы путь пути мост берег рынок поток дверь`.split(/\s+/).filter(x=>x.length>=MIN_WORD_LENGTH&&x.length<=MAX_WORD_LENGTH);
 let dictSrc="встроенный";
 async function loadDict(){
  if(Array.isArray(window.WORDS)){setDict(window.WORDS);if(W.length>=20)dictSrc="words.js"}
@@ -289,14 +295,15 @@ let closable=false;
 function ov(h,btns,cl){closable=!!cl;const c=$("card");c.innerHTML=h;btns.forEach(([t,f,k])=>{const b=document.createElement("button");b.className="btn "+(k||"");b.textContent=t;b.onclick=()=>{snd.click();f()};c.appendChild(b)});$("ov").classList.remove("hidden")}
 const cov=()=>$("ov").classList.add("hidden");
 $("ov").addEventListener("click",e=>{if(e.target.id=="ov"&&closable&&paused)resume()});
-const RULES=[["👆","Нажмите на букву, затем на свободную клетку: буква пройдёт туда по свободному пути (по горизонтали и вертикали)."],["🔤","Выстройте слово из 3–5 букв в строку (слева направо) или в столбец (сверху вниз): буквы исчезнут и принесут очки."],["⭐","Очки за слово: длина² × 2. Собрали слово: новые буквы не появляются. Нет слова: добавляются три новые."],["🧠","Первые пять букв всегда содержат слово. Новые буквы подбираются с учётом словаря."],["🎯","В уровнях нужно выполнить цель: собрать N слов или набрать N очков. В бесконечном режиме играйте ради рекорда."],["🛠️","Бустеры: 💡 подсказка покажет готовый ход или до трёх доступных слов, 🔨 молоток убирает одну букву, 🔀 перемешать создаёт почти готовое слово, ↩️ отмена возвращает последнее действие. Их число ограничено."],["💥","Игра заканчивается, когда поле заполнено."]];
+const RULES=[["👆","Нажмите на букву, затем на свободную клетку: буква пройдёт туда по свободному пути (по горизонтали и вертикали)."],["🔤","Выстройте слово из 4–6 букв по горизонтали или вертикали. Слова читаются в обоих направлениях; диагонали пока не учитываются."],["⭐","Очки за слово: длина² × 2. Собрали слово: новые буквы не появляются. Нет слова: добавляются новые буквы — их количество задаётся в настройках."],["🧠","Стартовый набор содержит слово. Новые буквы подбираются с учётом словаря."],["🎯","В уровнях нужно выполнить цель: собрать N слов или набрать N очков. В бесконечном режиме играйте ради рекорда."],["🛠️","Бустеры: 💡 подсказка покажет готовый ход или до трёх доступных слов, 🔨 молоток убирает одну букву, 🔀 перемешать создаёт почти готовое слово, ↩️ отмена возвращает последнее действие. Их число ограничено."],["💥","Игра заканчивается, когда поле заполнено."]];
 const rulesHTML=()=>RULES.map(([e,t],k)=>`<div class="rule"><i style="--h:${hue(k*4+3)}">${e}</i><span>${t}</span></div>`).join("");
 $("rl").innerHTML=rulesHTML();
 const swRow=(ic,l,k)=>`<div class="srow"><span>${ic} ${l}</span><label class="sw"><input type="checkbox" data-k="${k}" ${S[k]?"checked":""}><i></i></label></div>`;
 function buildSettings(box,back){
- box.innerHTML=`<h2 class="ab-h">НАСТРОЙКИ</h2>${swRow("🔊","Звук","snd")}<div class="srow"><span>🔉 Громкость</span><input type="range" class="vr" min="0" max="100" value="${S.vol*100}"></div>${swRow("📳","Вибрация","vib")}${swRow("✨","Анимации","anim")}<small class="sl">🎨 Тема оформления</small><div class="seg">${Object.entries(THEMES).map(([k,t])=>`<button data-th="${k}" class="${S.theme==k?"on":""}">${t}</button>`).join("")}</div><button class="btn alt" data-a="rst">🗑 Сбросить прогресс</button>`;
+ box.innerHTML=`<h2 class="ab-h">НАСТРОЙКИ</h2>${swRow("🔊","Звук","snd")}<div class="srow"><span>🔉 Громкость</span><input type="range" class="vr" min="0" max="100" value="${S.vol*100}"></div>${swRow("📳","Вибрация","vib")}${swRow("✨","Анимации","anim")}<small class="sl">➕ Новые буквы за ход без слова</small><div class="seg">${[1,2,3].map(n=>`<button data-spawn="${n}" class="${S.spawn==n?"on":""}">${n}</button>`).join("")}</div><small style="color:var(--mut);font-weight:700;text-align:left">Меньше букв — спокойнее игра. Настройку можно менять в любой момент.</small><small class="sl">🎨 Тема оформления</small><div class="seg">${Object.entries(THEMES).map(([k,t])=>`<button data-th="${k}" class="${S.theme==k?"on":""}">${t}</button>`).join("")}</div><button class="btn alt" data-a="rst">🗑 Сбросить прогресс</button>`;
  box.querySelectorAll("input[data-k]").forEach(i=>i.onchange=()=>{S[i.dataset.k]=i.checked?1:0;save();applySettings();i.dataset.k=="vib"?vib(40):snd.click()});
  const vr=box.querySelector(".vr");vr.oninput=()=>{S.vol=vr.value/100;save()};vr.onchange=snd.click;
+ box.querySelectorAll("[data-spawn]").forEach(b=>b.onclick=()=>{S.spawn=+b.dataset.spawn;save();box.querySelectorAll("[data-spawn]").forEach(x=>x.classList.toggle("on",x===b));snd.click()});
  box.querySelectorAll("[data-th]").forEach(b=>b.onclick=()=>{S.theme=b.dataset.th;save();applySettings();box.querySelectorAll("[data-th]").forEach(x=>x.classList.toggle("on",x===b));snd.click()});
  const r=box.querySelector("[data-a=rst]");let sure=false;
  r.onclick=()=>{if(!sure){sure=true;r.textContent="Точно сбросить? Нажми ещё раз";return}S.unlocked=1;S.best=0;S.lb={};S.tw=0;save();updMenu();sure=false;r.textContent="Прогресс сброшен ✓"};
@@ -424,14 +431,14 @@ function wordFits(w,c){
 function availableWords(grid=g.grid,limit=3){
  const c=inventory(grid),found=[];
  // Сначала длинные слова: более убедительная и полезная подсказка.
- for(const len of [5,4,3]){
+ for(const len of [6,5,4]){
   for(let i=0;i<WI.length;i++)if(WI[i].length===len&&wordFits(WI[i],c)){
    found.push(W[i]);if(found.length>=limit)return found;
   }
  }
  return found;
 }
-function closestWord(c,preferred=5){
+function closestWord(c,preferred=6){
  let best=null,missing=Infinity;
  for(let t=0;t<WI.length;t++){
   const w=WI[t],temp=c.slice(),miss=[];
@@ -450,7 +457,7 @@ function spawn(k){
  const cnt=inventory(),total=g.grid.filter(v=>v>=0).length;
  let add=Array.from({length:k},rn);
  if(total===0&&k>=5&&WI.length){
-  // Гарантированное стартовое слово ровно из доступных пяти плиток.
+  // Гарантированное стартовое слово из стартового набора.
   const candidates=WI.filter(w=>w.length===5);
   const word=(candidates.length?candidates:WI.filter(w=>w.length<=5))[rnd(candidates.length||WI.filter(w=>w.length<=5).length)];
   if(word){word.forEach((ch,i)=>add[i]=ch)}
@@ -465,7 +472,7 @@ function spawn(k){
    }
    let c=cnt.slice();add.forEach(ch=>c[ch]++);
    if(!formable(c,1)){
-    const target=closestWord(cnt,Math.min(5,total+k));
+    const target=closestWord(cnt,Math.min(6,total+k));
     if(target&&target.missing.length<=k)target.missing.forEach((ch,i)=>add[i]=ch);
    }
   }
@@ -480,12 +487,18 @@ function findWords(){
  for(const L of LINES){let i=0;
   while(i<N){if(g.grid[L[i]]<0){i++;continue}
    let j=i;while(j<N&&g.grid[L[j]]>=0)j++;
-   for(let p=i;p<j;){let f=0;
-    for(let len=Math.min(5,j-p);len>=3;len--){const cs=L.slice(p,p+len),s=cs.map(x=>AL[g.grid[x]]).join("");
-     if(D.has(s)){cs.forEach(x=>rm.add(x));found.push(s);pts+=len*len*2;f=len;break}}
-    p+=f||1}
-   i=j}}
- return{rm,found,pts,max:Math.max(0,...found.map(s=>s.length))};
+   for(let p=i;p<j;){let matched=0;
+    for(let len=Math.min(MAX_WORD_LENGTH,j-p);len>=MIN_WORD_LENGTH;len--){
+     const cs=L.slice(p,p+len),letters=cs.map(x=>AL[g.grid[x]]).join("");
+     const word=D.has(letters)?letters:(D.has([...letters].reverse().join(""))?[...letters].reverse().join(""):null);
+     if(word){cs.forEach(x=>rm.add(x));found.push(word);pts+=len*len*2;matched=len;break}
+    }
+    p+=matched||1;
+   }
+   i=j;
+  }
+ }
+ return{rm,found,pts,max:Math.max(0,...found.map(w=>w.length))};
 }
 /* ---- эффекты на canvas ---- */
 const fxc=$("fx"),fxx=fxc.getContext("2d");let FP=[],FB=[],fraf=0,DPR=1,FW=1,SCL=1,DESK=false;
@@ -551,72 +564,57 @@ function tap(i){
 // НОВАЯ ОПТИМИЗИРОВАННАЯ АНИМАЦИЯ ДВИЖЕНИЯ (Без пересчета DOM-сетки)
 async function move(p){
  g.busy=true; mkSnap(); $("toast").textContent="";
- const oldSel = g.sel;
+ const oldSel=g.sel;
  g.sel=-1;
- if(oldSel>=0) renderCell(oldSel);
+ if(oldSel>=0)renderCell(oldSel);
 
- const start = p[0], end = p[p.length - 1];
- const letter = g.grid[start];
- const c1 = cells[start];
-
- // Скрываем оригинальную букву
- g.grid[start] = -1;
+ const start=p[0],end=p[p.length-1],letter=g.grid[start],c1=cells[start];
+ g.grid[start]=-1;
  renderCell(start);
 
- // Создаем летящий элемент поверх поля
- const fly = document.createElement('i');
- fly.className = 'lt b';
- fly.textContent = AL[letter];
- fly.style.cssText = `
-   position: absolute;
-   left: ${c1.offsetLeft}px;
-   top: ${c1.offsetTop}px;
-   width: ${c1.offsetWidth}px;
-   height: ${c1.offsetHeight}px;
-   display: flex;
-   align-items: center;
-   justify-content: center;
-   pointer-events: none;
-   z-index: 99;
-   transition: transform 0.032s linear;
-   transform: translate(0, 0);
-   will-change: transform;
-   font-size: ${c1.offsetWidth * 0.7}px;
-   --h: ${hue(letter)};
-   --d: ${[-6,0,6][letter % 3]}%;
- `;
- $("bw").appendChild(fly);
+ // Отдельный слой поверх поля: сетка не перестраивается во время анимации.
+ const layer=$("flylayer"),fly=document.createElement("i");
+ fly.className="lt b fly";
+ fly.textContent=AL[letter];
+ const size=c1.offsetWidth;
+ fly.style.width=size+"px";
+ fly.style.height=size+"px";
+ fly.style.fontSize=(size*.7)+"px";
+ fly.style.setProperty("--h",hue(letter));
+ fly.style.setProperty("--d",[-6,0,6][letter%3]+"%");
+ layer.appendChild(fly);
 
- // Плавный перелет по дорожке
- for (let k = 1; k < p.length; k++) {
-   const c2 = cells[p[k]];
-   const dx = c2.offsetLeft - c1.offsetLeft;
-   const dy = c2.offsetTop - c1.offsetTop;
-   fly.style.transform = `translate(${dx}px, ${dy}px)`;
-   
-   // След (шлейф) за буквой на Canvas
-   if (S.anim) {
-     const tx = c2.offsetLeft + c2.offsetWidth / 2;
-     const ty = c2.offsetTop + c2.offsetHeight / 2;
-     FP.push({
-       x: tx, y: ty, vx: 0, vy: 0, r: c2.offsetWidth * 0.15, 
-       c: `hsl(${hue(letter)} 85% 58%)`, t0: performance.now(), life: 250
-     });
-     fxGo();
-   }
-   snd.step();
-   await wait(32);
+ const points=p.map(i=>({x:cells[i].offsetLeft,y:cells[i].offsetTop}));
+ const keyframes=points.map((pt,k)=>({
+  transform:`translate3d(${pt.x}px,${pt.y}px,0)`,
+  offset:points.length===1?1:k/(points.length-1)
+ }));
+ fly.style.transform=keyframes[0].transform;
+ if(S.anim&&points.length>1){
+  // Едва заметный след в пройденных клетках; элементы сами затухают и удаляются.
+  points.slice(0,-1).forEach(pt=>{
+   const dot=document.createElement("i");dot.className="trail-dot";
+   dot.style.left=(pt.x+size/2)+"px";dot.style.top=(pt.y+size/2)+"px";
+   dot.style.setProperty("--h",hue(letter));layer.appendChild(dot);
+   dot.addEventListener("animationend",()=>dot.remove(),{once:true});
+  });
+  const duration=(points.length-1)*62;
+  const animation=fly.animate(keyframes,{duration,easing:"linear",fill:"forwards"});
+  snd.step();
+  try{await animation.finished}catch(e){}
+ }else{
+  fly.style.transform=keyframes[keyframes.length-1].transform;
  }
+ fly.remove();
 
  // Финализируем позицию
- fly.remove();
  g.grid[end] = letter;
  renderCell(end);
 
  let r=findWords();
  if(r.found.length) await clear(r);
  else {
-   g.fresh = new Set(spawn(3));
+   g.fresh = new Set(spawn(S.spawn));
    render();
    snd.spawn();
    r = findWords();
@@ -670,7 +668,10 @@ $("bHint").onclick=()=>{
   $("toast").textContent="Готовый ход: «"+h[2]+"» · подсвечены буква и цель";
  }else{
   g.hintLetters=positionsForWord(words[0]);
-  $("toast").textContent="Из этих букв: "+words.map(w=>"«"+w+"»").join(", ")+" · соберите на линии";
+  const alternatives=words.slice(1);
+  $("toast").textContent="Подсвечены буквы для слова «"+words[0]+"»."+
+   (alternatives.length?" Также из текущего набора можно составить: "+alternatives.map(w=>"«"+w+"»").join(", ")+".":"")+
+   " Выстройте буквы выбранного слова в одну линию.";
  }
  render();updBoost();tone(880,.12,"triangle",.15);
 };
@@ -692,7 +693,7 @@ function smartShuffle(){
  let changed=0;
  if(!word){
   // При отсутствии подходящих букв минимально исправляем состав.
-  const match=closestWord(inventory(),Math.min(5,count));
+  const match=closestWord(inventory(),Math.min(6,count));
   if(match&&match.word.length<=count){
    const need=match.word.slice(),left=letters.slice();
    for(const ch of need){const i=left.indexOf(ch);if(i>=0)left.splice(i,1)}
