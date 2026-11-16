@@ -64,11 +64,10 @@ background:linear-gradient(160deg,var(--acc),var(--acc2));box-shadow:0 4px 0 col
 .box{padding:5px 8px;text-align:center}
 .box small{display:block;font-size:10px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:1px}
 .box b{display:inline-block;font-size:24px;font-weight:900;font-variant-numeric:tabular-nums}
-.box b.bump{animation:bump .25s}
-@keyframes bump{50%{transform:scale(1.25)}}
+/* HUD numbers update without forced layout */
 .goal{min-height:40px;display:flex;align-items:center}
 .pgoal{position:relative;width:100%;height:30px;border-radius:15px;background:linear-gradient(180deg,var(--tile2),var(--tile1));overflow:hidden;box-shadow:inset 0 2px 4px var(--ins),inset 0 0 0 1px var(--line)}
-.pgoal i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:15px;background:linear-gradient(90deg,var(--acc),var(--acc2));box-shadow:inset 0 2px 0 rgba(255,255,255,.35);transition:width .4s}
+.pgoal i{position:absolute;left:0;top:0;bottom:0;width:100%;border-radius:15px;background:linear-gradient(90deg,var(--acc),var(--acc2));box-shadow:inset 0 2px 0 rgba(255,255,255,.35);transform:scaleX(0);transform-origin:left center;transition:transform .22s ease-out;will-change:transform}
 /* Измененный цвет рекорда: темный шрифт со светлой обводкой */
 .pgoal span{position:relative;display:block;text-align:center;line-height:30px;font-weight:900;font-size:14px;color:var(--fg);text-shadow:0 0 4px var(--bg1), 0 0 4px var(--bg1)}
 .recp,#wl{display:none}
@@ -88,9 +87,9 @@ background:linear-gradient(180deg,var(--tile2),var(--tile1));box-shadow:inset 0 
 .new .b{animation:pin .35s cubic-bezier(.3,1.6,.5,1)}
 #board button.sel{box-shadow:0 0 0 3px var(--acc),0 0 16px color-mix(in srgb,var(--acc) 75%,transparent),inset 0 1px 0 rgba(255,255,255,.4)}
 .sel .b{transform:scale(1.14)}
-.pop .b{animation:pop .36s forwards}
+.pop .b{animation:pop .18s ease-in forwards;animation-delay:var(--pop-delay,0ms)}
 @keyframes pin{from{transform:scale(0)}}
-@keyframes pop{40%{transform:scale(1.4);filter:brightness(1.4)}to{transform:scale(0);opacity:0}}
+@keyframes pop{35%{transform:scale(1.16)}to{transform:scale(.12);opacity:0}}
 #fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:6}
 #flylayer{position:absolute;inset:0;overflow:visible;pointer-events:none;z-index:8;contain:layout paint}
 #flylayer .fly{position:absolute;left:0;top:0;display:flex;align-items:center;justify-content:center;pointer-events:none;will-change:transform;filter:drop-shadow(0 4px 5px rgba(0,0,0,.35))}
@@ -254,7 +253,7 @@ html.desk .bst{padding:10px 2px 8px}html.desk .bst .ic{font-size:28px}
 <script src="words.js"></script>
 <script>
 const N=9,T=81;
-const AL="абвгдеёжзийклмнопрстуфхцчшщъыьэюя";
+const AL="абвгдежзийклмнопрстуфхцчшщъыьэюя";
 const POOL=AL+"оооооеееееаааааииинннттссрррввллккммддппууыьзбгячйх";
 const $=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms)),rnd=n=>Math.floor(Math.random()*n),rr=(a,b)=>a+Math.random()*(b-a);
 const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
@@ -280,7 +279,7 @@ const wait=ms=>new Promise(r=>setTimeout(r,S.anim?ms:0));
 /* ---- словарь ---- */
 let W=[],WI=[],D=new Set();
 const MIN_WORD_LENGTH=4,MAX_WORD_LENGTH=6;
-function setDict(a){const r=/^[а-яё]{4,6}$/;W=[...new Set(a.map(x=>String(x).trim().toLowerCase()).filter(x=>r.test(x)))];D=new Set(W);WI=W.map(w=>[...w].map(c=>AL.indexOf(c)))}
+function setDict(a){const r=/^[а-я]{4,6}$/;W=[...new Set(a.map(x=>String(x).normalize("NFC").trim().toLowerCase().replace(/ё/g,"е")).filter(x=>r.test(x)))];D=new Set(W);WI=W.map(w=>[...w].map(c=>AL.indexOf(c)))}
 // Резервный словарь для запуска без внешнего words.js / words.json.
 const BASE = `кот дом лес мир сон нос рот год час шар сыр рак мак лук сок кит ток бак бок бой май чай рай сад дуб мяч дым ход лёд лёд ёжик зима лето море поле река рука нога гора игра вода вино окно кино день ночь снег дождь ветер берег город слово буква книга школа ручка доска парта класс урок ответ вопрос номер экран файл кодер робот поезд вагон мотор колёс колесо адрес центр спорт тенис теннис мячик матч сетка корт удар ракет ракетка линия песок волна свет цвет масло сахар тесто хлеб пирог супы груша слива лимон банан яблок яблоко ягода трава ветка лист листа цветы кусты сосна ёлка ствол реки ручей остров карта страна мирок герой друг дружба семья мама папа дочка сынок брат сестра кошка собака мышка птица рыба акула тигр зебра лиса волк медведь зайка утка гусь петух курица муха пчела жук паук крот слон конь кони коза овца бобр ёжик игла нитка ткань шапка обувь сапог носок рукав куртка платье шарф дверь крыша стена полка стол стул диван лампа свеча часы день утро вечер ночь среда пятно пятка пятак палка палец кулак ладонь лицо глаза глаз ухо уши носик зубы зубок ротик щека язык голос звук песня танец нота радио театр сцена кино фильм экран кадр автор роман сказка текст тема мысль умник успех сила огонь вода воздух земля космос звезда луна месяц солнце лучик небо облак туча дождь гроза мороз холод тепло жара весна осень зима лето месяц апрель март июнь июль август январь сутки время дата число цифра сумма рубль цена товар рынок заказ пакет сумка короб ящик ключ замок врата вход выход лево право верх низко назад перед после рядом между вдоль опять всегда тогда позже скоро снова резко тихо гром шаги бегом бегун ходок игрок игра ход ходи поле доска фишка линия слово слова буквы звуки точка пауза старт финиш призы бонус очки баллы победа ничья раунд серия рывок шанс удача риск выбор задача цель опыт навык метод логик логика поиск ходик след следы путь пути мост берег рынок поток дверь`.split(/\s+/).filter(x=>x.length>=MIN_WORD_LENGTH&&x.length<=MAX_WORD_LENGTH);
 let dictSrc="встроенный";
@@ -388,15 +387,23 @@ function render(){
 function renderCells(ids){
  for(const i of ids)renderCell(i);
 }
-function bump(id,v){const e=$(id);e.textContent=v;e.classList.remove("bump");e.offsetWidth;e.classList.add("bump")}
+function bump(id,v){$(id).textContent=v}
 function buildHud(){
  $("score").textContent=g.score;$("words").textContent=g.words;$("toast").textContent="";recent=[];renderWl();
  $("goal").innerHTML=`<div class="pgoal"><i id="pg"></i><span id="pgt"></span></div>`;updHud();updBoost();
 }
 function updHud(){
- const rec=g.mode=="inf"?S.best:S.lb[g.level]||0;$("recv").textContent=Math.max(rec,g.score);$("recl").textContent=g.mode=="inf"?"Рекорд бесконечного":"Рекорд уровня";
- if(g.mode=="lvl"){const G=goal(g.level),v=G.t=="w"?g.words:g.score;$("pg").style.width=Math.min(100,v/G.v*100)+"%";$("pgt").textContent=(G.t=="w"?"Слов ":"Очков ")+Math.min(v,G.v)+" / "+G.v}
- else{$("pg").style.width="0";$("pgt").textContent="∞ рекорд "+Math.max(S.best,g.score)}
+ const rec=g.mode=="inf"?S.best:S.lb[g.level]||0;
+ $("recv").textContent=Math.max(rec,g.score);
+ $("recl").textContent=g.mode=="inf"?"Рекорд бесконечного":"Рекорд уровня";
+ if(g.mode=="lvl"){
+  const G=goal(g.level),v=G.t=="w"?g.words:g.score,ratio=Math.max(0,Math.min(1,v/G.v));
+  $("pg").style.transform=`scaleX(${ratio})`;
+  $("pgt").textContent=(G.t=="w"?"Слов ":"Очков ")+Math.min(v,G.v)+" / "+G.v;
+ }else{
+  $("pg").style.transform="scaleX(0)";
+  $("pgt").textContent="∞ рекорд "+Math.max(S.best,g.score);
+ }
 }
 function renderWl(){$("wl").innerHTML=recent.map(w=>`<span style="--h:${hue(AL.indexOf(w[0]))}">${w}</span>`).join("")}
 async function begin(mode,level){
@@ -500,41 +507,64 @@ function findWords(){
  }
  return{rm,found,pts,max:Math.max(0,...found.map(w=>w.length))};
 }
-/* ---- эффекты на canvas ---- */
-const fxc=$("fx"),fxx=fxc.getContext("2d");let FP=[],FB=[],fraf=0,DPR=1,FW=1,SCL=1,DESK=false;
-function fxSize(){DPR=Math.min((window.devicePixelRatio||1)*SCL,2);FW=$("bw").clientWidth||1;fxc.width=FW*DPR;fxc.height=FW*DPR}
+/* ---- эффекты на canvas: разлетающиеся буквы вместо пузырьков ---- */
+const fxc=$("fx"),fxx=fxc.getContext("2d");let FP=[],fraf=0,DPR=1,FW=1,SCL=1,DESK=false;
+function fxSize(){
+ DPR=Math.min((window.devicePixelRatio||1)*SCL,LITE?1:1.5);
+ FW=$("bw").clientWidth||1;fxc.width=FW*DPR;fxc.height=FW*DPR;
+}
 if(window.ResizeObserver)new ResizeObserver(fxSize).observe($("bw"));
 const fxGo=()=>{if(!fraf)fraf=requestAnimationFrame(fxLoop)};
-function fxBurst(x,y,col,n,sp=1,delay=0){
- if(!S.anim)return;const t0=performance.now()+delay;
- for(let i=0;i<n;i++){const a=Math.random()*6.283,v=(1.4+Math.random()*3.4)*sp;FP.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-.8,r:3+Math.random()*6,c:col,t0,life:500+Math.random()*450})}
+function fxLetterBurst(x,y,ch,col,delay=0){
+ if(!S.anim)return;
+ const a=Math.random()*6.283,v=1.8+Math.random()*2.2;
+ FP.push({x,y,ch,c:col,vx:Math.cos(a)*v,vy:Math.sin(a)*v-1.1,
+  rot:(Math.random()-.5)*.25,spin:(Math.random()-.5)*.055,
+  size:Math.max(15,FW/N*.68),t0:performance.now()+delay,life:185+Math.random()*25});
  fxGo();
 }
 function fxLoop(now){
  fraf=0;const x=fxx;x.setTransform(DPR,0,0,DPR,0,0);x.clearRect(0,0,FW,FW);
- FB=FB.filter(b=>{const a=(now-b.t0)/b.life;if(a<0)return true;if(a>1)return false;x.globalAlpha=(1-a)*.85;x.strokeStyle=b.c;x.lineWidth=6*(1-a)+2;x.beginPath();x.arc(b.x,b.y,b.r*a+8,0,6.283);x.stroke();return true});
- FP=FP.filter(p=>{const age=now-p.t0;if(age<0)return true;if(age>p.life)return false;
-  p.x+=p.vx;p.y+=p.vy;p.vx*=.965;p.vy=p.vy*.965-.035;const al=1-age/p.life;
-  x.globalAlpha=al;x.fillStyle=p.c;x.beginPath();x.arc(p.x,p.y,p.r,0,6.283);x.fill();
-  x.globalAlpha=al*.8;x.fillStyle="#fff";x.beginPath();x.arc(p.x-p.r*.3,p.y-p.r*.3,p.r*.3,0,6.283);x.fill();return true});
- x.globalAlpha=1;if(FP.length||FB.length)fxGo();
+ FP=FP.filter(p=>{
+  const age=now-p.t0;if(age<0)return true;if(age>p.life)return false;
+  p.x+=p.vx;p.y+=p.vy;p.vx*=.982;p.vy=p.vy*.982+.025;p.rot+=p.spin;
+  x.save();x.globalAlpha=1-age/p.life;x.translate(p.x,p.y);x.rotate(p.rot);
+  x.textAlign="center";x.textBaseline="middle";
+  x.font=`900 ${p.size}px ui-rounded, "Arial Rounded MT Bold", system-ui, sans-serif`;
+  x.fillStyle=p.c;x.fillText(p.ch,0,0);x.restore();return true;
+ });
+ if(FP.length)fxGo();
 }
 const ctr=i=>[cells[i].offsetLeft+cells[i].offsetWidth/2,cells[i].offsetTop+cells[i].offsetHeight/2];
-function burst(i,v){const[x,y]=ctr(i);fxBurst(x,y,`hsl(${hue(v)} 85% 58%)`,LITE?4:8)}
+function burst(i,v){const[x,y]=ctr(i);fxLetterBurst(x,y,AL[v],`hsl(${hue(v)} 85% 58%)`)}
 function floatTxt(t,i){const e=document.createElement("div");e.className="fl";e.textContent=t;const[x,y]=ctr(i);e.style.left=x+"px";e.style.top=y+"px";$("bw").appendChild(e);setTimeout(()=>e.remove(),1000)}
 function shake(){const b=$("board");b.classList.remove("shake");b.offsetWidth;b.classList.add("shake")}
 function confetti(){if(!S.anim)return;for(let i=0;i<(LITE?22:50);i++){const d=document.createElement("i");d.className="cf";d.style.cssText=`left:${rnd(100)}%;background:hsl(${rnd(360)} 85% 58%);--t:${rr(1.8,3.2)}s;--dx:${rnd(160)-80}px;animation-delay:${Math.random()*.5}s`;document.body.appendChild(d);setTimeout(()=>d.remove(),4000)}}
+
 /* ---- ходы ---- */
 async function clear(r){
  const ids=[...r.rm],mid=ids[ids.length>>1];
- ids.forEach(i=>{burst(i,g.grid[i]);cells[i].classList.add("pop");cells[i]._cls = null;});
- if(S.anim){const[x,y]=ctr(mid);FB.push({x,y,r:FW*.18,c:"#fff",t0:performance.now(),life:450});fxGo()}
- snd.word(r.max);vib(40);$("toast").textContent=r.found.join(", ");floatTxt("+"+r.pts,mid);
+ if(S.anim){
+  ids.forEach((i,k)=>{
+   const v=g.grid[i],[x,y]=ctr(i);
+   cells[i].style.setProperty("--pop-delay",`${k*12}ms`);
+   cells[i].classList.add("pop");cells[i]._cls=null;
+   fxLetterBurst(x,y,AL[v],`hsl(${hue(v)} 85% 58%)`,k*12);
+  });
+ }
+ snd.word(r.max);vib(40);
+ $("toast").textContent=r.found.join(", ");
  recent=[...r.found,...recent].slice(0,14);renderWl();
- await wait(420);
- ids.forEach(i=>g.grid[i]=-1);g.score+=r.pts;g.words+=r.found.length;S.tw+=r.found.length;
+
+ // Сначала завершается короткий разлёт букв; затем отдельно двигается прогресс.
+ await wait(250);
+ ids.forEach(i=>{g.grid[i]=-1;cells[i].style.removeProperty("--pop-delay")});
+ g.score+=r.pts;g.words+=r.found.length;S.tw+=r.found.length;
  if(g.mode=="inf"&&g.score>S.best)S.best=g.score;
- save();bump("score",g.score);bump("words",g.words);updHud();render();
+ save();
+ $("score").textContent=g.score;$("words").textContent=g.words;
+ updHud();render();
+ if(S.anim)setTimeout(()=>floatTxt("+"+r.pts,mid),130);
 }
 function path(a,b){
  const prev=Array(T).fill(-2);prev[a]=-1;const q=[a];
@@ -684,7 +714,7 @@ $("bHam").onclick=()=>{
 async function hammerAt(i){
  mkSnap();g.busy=true;g.hammer=false;g.ham--;
  burst(i,g.grid[i]);cells[i].classList.add("pop");cells[i]._cls = null;tone(200,.15,"square",.15);vib(30);updBoost();
- await wait(320);
+ await wait(220);
  g.grid[i]=-1;g.busy=false;$("toast").textContent="";renderCell(i);
 }
 function smartShuffle(){
