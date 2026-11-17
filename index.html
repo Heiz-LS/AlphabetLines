@@ -294,7 +294,7 @@ let closable=false;
 function ov(h,btns,cl){closable=!!cl;const c=$("card");c.innerHTML=h;btns.forEach(([t,f,k])=>{const b=document.createElement("button");b.className="btn "+(k||"");b.textContent=t;b.onclick=()=>{snd.click();f()};c.appendChild(b)});$("ov").classList.remove("hidden")}
 const cov=()=>$("ov").classList.add("hidden");
 $("ov").addEventListener("click",e=>{if(e.target.id=="ov"&&closable&&paused)resume()});
-const RULES=[["👆","Нажмите на букву, затем на свободную клетку: буква пройдёт туда по свободному пути (по горизонтали и вертикали)."],["🔤","Выстройте слово из 4–6 букв по горизонтали или вертикали. Слова читаются в обоих направлениях; диагонали пока не учитываются."],["⭐","Очки за слово: длина² × 2. Собрали слово: новые буквы не появляются. Нет слова: добавляются новые буквы — их количество задаётся в настройках."],["🧠","Стартовый набор содержит слово. Новые буквы подбираются с учётом словаря."],["🎯","В уровнях нужно выполнить цель: собрать N слов или набрать N очков. В бесконечном режиме играйте ради рекорда."],["🛠️","Бустеры: 💡 подсказка покажет готовый ход или до трёх доступных слов, 🔨 молоток убирает одну букву, 🔀 перемешать создаёт почти готовое слово, ↩️ отмена возвращает последнее действие. Их число ограничено."],["💥","Игра заканчивается, когда поле заполнено."]];
+const RULES=[["👆","Нажмите на букву, затем на свободную клетку: буква пройдёт туда по свободному пути (по горизонтали и вертикали)."],["🔤","Выстройте слово из 4–6 букв по горизонтали, вертикали или диагонали. Слова читаются в обоих направлениях."],["⭐","Очки за слово: длина² × 2. Собрали слово: новые буквы не появляются. Нет слова: добавляются новые буквы — их количество задаётся в настройках."],["🧠","Стартовый набор содержит слово. Новые буквы подбираются с учётом словаря."],["🎯","В уровнях нужно выполнить цель: собрать N слов или набрать N очков. В бесконечном режиме играйте ради рекорда."],["🛠️","Бустеры: 💡 подсказка покажет готовый ход или до трёх доступных слов, 🔨 молоток убирает одну букву, 🔀 перемешать создаёт почти готовое слово, ↩️ отмена возвращает последнее действие. Их число ограничено."],["💥","Игра заканчивается, когда поле заполнено."]];
 const rulesHTML=()=>RULES.map(([e,t],k)=>`<div class="rule"><i style="--h:${hue(k*4+3)}">${e}</i><span>${t}</span></div>`).join("");
 $("rl").innerHTML=rulesHTML();
 const swRow=(ic,l,k)=>`<div class="srow"><span>${ic} ${l}</span><label class="sw"><input type="checkbox" data-k="${k}" ${S[k]?"checked":""}><i></i></label></div>`;
@@ -488,12 +488,44 @@ function spawn(k){
  return empty.slice(0,k);
 }
 
-const LINES=[];for(let a=0;a<N;a++){LINES.push(Array.from({length:N},(_,c)=>a*N+c));LINES.push(Array.from({length:N},(_,r)=>r*N+a))}
+// ---- ЛИНИИ ДЛЯ ПОИСКА СЛОВ ----
+// Строки, столбцы и обе диагонали (↘ и ↙). Движение букв по-прежнему
+// только по горизонтали/вертикали, но засчитываются и диагональные слова.
+const LINES=[];
+for(let a=0;a<N;a++){
+ LINES.push(Array.from({length:N},(_,c)=>a*N+c)); // строки
+ LINES.push(Array.from({length:N},(_,r)=>r*N+a)); // столбцы
+}
+// Диагонали ↘: стартуем с верхней строки и левого столбца.
+for(let r=0;r<N;r++){
+ const d=[];
+ for(let i=0;r+i<N;i++)d.push((r+i)*N+i);
+ if(d.length>=MIN_WORD_LENGTH)LINES.push(d);
+}
+for(let c=1;c<N;c++){
+ const d=[];
+ for(let i=0;c+i<N;i++)d.push(i*N+c+i);
+ if(d.length>=MIN_WORD_LENGTH)LINES.push(d);
+}
+// Диагонали ↙: стартуем с верхней строки и правого столбца.
+for(let c=0;c<N;c++){
+ const d=[];
+ for(let i=0;c-i>=0;i++)d.push(i*N+c-i);
+ if(d.length>=MIN_WORD_LENGTH)LINES.push(d);
+}
+for(let r=1;r<N;r++){
+ const d=[];
+ for(let i=0;r+i<N&&N-1-i>=0;i++)d.push((r+i)*N+(N-1-i));
+ if(d.length>=MIN_WORD_LENGTH)LINES.push(d);
+}
+
 function findWords(){
  const rm=new Set(),found=[];let pts=0;
- for(const L of LINES){let i=0;
-  while(i<N){if(g.grid[L[i]]<0){i++;continue}
-   let j=i;while(j<N&&g.grid[L[j]]>=0)j++;
+ for(const L of LINES){
+  const n=L.length;let i=0;
+  while(i<n){
+   if(g.grid[L[i]]<0){i++;continue}
+   let j=i;while(j<n&&g.grid[L[j]]>=0)j++;
    for(let p=i;p<j;){let matched=0;
     for(let len=Math.min(MAX_WORD_LENGTH,j-p);len>=MIN_WORD_LENGTH;len--){
      const cs=L.slice(p,p+len),letters=cs.map(x=>AL[g.grid[x]]).join("");
