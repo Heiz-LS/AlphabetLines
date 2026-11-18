@@ -232,7 +232,7 @@ html.desk .bst{padding:10px 2px 8px}html.desk .bst .ic{font-size:28px}
  </section>
  <section class="screen" id="game">
   <div id="gpanel">
-   <div class="top"><button class="btn round" id="bPause" aria-label="Пауза"><svg viewBox="0 0 24 24" width="22" height="22"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="#fff"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="#fff"/></svg></button>
+   <div class="top"><button class="btn round" id="bPause" aria-label="Пауза"><svg viewBox="0 0 24 24" width="22" height="22"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="#fff"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="#fff"/></svg></button><button class="btn round" id="bMenu" aria-label="Главное меню" title="Главное меню">⌂</button>
     <div class="hud"><div class="box"><small>Очки</small><b id="score">0</b></div><div class="box"><small>Слов</small><b id="words">0</b></div></div></div>
    <div class="goal" id="goal"></div>
    <div class="recp"><span style="font-size:30px">🏆</span><div><small id="recl">Рекорд</small><b id="recv">0</b></div></div>
@@ -279,7 +279,7 @@ const wait=ms=>new Promise(r=>setTimeout(r,S.anim?ms:0));
 /* ---- словарь ---- */
 let W=[],WI=[],D=new Set();
 const MIN_WORD_LENGTH=4,MAX_WORD_LENGTH=6;
-function setDict(a){const r=/^[а-я]{4,6}$/;W=[...new Set(a.map(x=>String(x).normalize("NFC").trim().toLowerCase().replace(/ё/g,"е")).filter(x=>r.test(x)))];D=new Set(W);WI=W.map(w=>[...w].map(c=>AL.indexOf(c)))}
+function setDict(a){const r=/^[а-я]{4,6}$/;W=[...new Set(a.map(x=>String(x).normalize("NFC").trim().toLowerCase().replace(/ё/g,"е")).filter(x=>r.test(x)&&!x.endsWith("у")))];D=new Set(W);WI=W.map(w=>[...w].map(c=>AL.indexOf(c)))}
 // Резервный словарь для запуска без внешнего words.js / words.json.
 const BASE = `кот дом лес мир сон нос рот год час шар сыр рак мак лук сок кит ток бак бок бой май чай рай сад дуб мяч дым ход лёд лёд ёжик зима лето море поле река рука нога гора игра вода вино окно кино день ночь снег дождь ветер берег город слово буква книга школа ручка доска парта класс урок ответ вопрос номер экран файл кодер робот поезд вагон мотор колёс колесо адрес центр спорт тенис теннис мячик матч сетка корт удар ракет ракетка линия песок волна свет цвет масло сахар тесто хлеб пирог супы груша слива лимон банан яблок яблоко ягода трава ветка лист листа цветы кусты сосна ёлка ствол реки ручей остров карта страна мирок герой друг дружба семья мама папа дочка сынок брат сестра кошка собака мышка птица рыба акула тигр зебра лиса волк медведь зайка утка гусь петух курица муха пчела жук паук крот слон конь кони коза овца бобр ёжик игла нитка ткань шапка обувь сапог носок рукав куртка платье шарф дверь крыша стена полка стол стул диван лампа свеча часы день утро вечер ночь среда пятно пятка пятак палка палец кулак ладонь лицо глаза глаз ухо уши носик зубы зубок ротик щека язык голос звук песня танец нота радио театр сцена кино фильм экран кадр автор роман сказка текст тема мысль умник успех сила огонь вода воздух земля космос звезда луна месяц солнце лучик небо облак туча дождь гроза мороз холод тепло жара весна осень зима лето месяц апрель март июнь июль август январь сутки время дата число цифра сумма рубль цена товар рынок заказ пакет сумка короб ящик ключ замок врата вход выход лево право верх низко назад перед после рядом между вдоль опять всегда тогда позже скоро снова резко тихо гром шаги бегом бегун ходок игрок игра ход ходи поле доска фишка линия слово слова буквы звуки точка пауза старт финиш призы бонус очки баллы победа ничья раунд серия рывок шанс удача риск выбор задача цель опыт навык метод логик логика поиск ходик след следы путь пути мост берег рынок поток дверь`.split(/\s+/).filter(x=>x.length>=MIN_WORD_LENGTH&&x.length<=MAX_WORD_LENGTH);
 let dictSrc="встроенный";
@@ -426,6 +426,7 @@ function ovSet(){
  $("cx").onclick=resume;buildSettings($("sbx"),["← Назад",pauseMenu]);
 }
 $("bPause").onclick=pauseMenu;
+$("bMenu").onclick=()=>{if(!playing||g.over)return;snd.click();paused=true;ov(`<h2>В главное меню?</h2><p>Текущая партия будет завершена.</p>`,[["Продолжить",resume,"ok"],["⌂ В меню",()=>{cov();paused=false;show("menu")},"alt"]],1)};
 /* ---- генерация букв ---- */
 function formable(c,need){let f=0;for(const w of WI){const t=c.slice();let ok=true;for(const i of w){if(--t[i]<0){ok=false;break}}if(ok&&++f>=need)return true}return false}
 function inventory(grid=g.grid){
