@@ -22,9 +22,9 @@ h1{margin:0;text-align:center;font-size:clamp(34px,10.5vw,52px);font-weight:900;
 h2{margin:0;text-align:center;font-size:26px;font-weight:900}
 /* буквы: матовая одноцветная заливка */
 .lt{font-style:normal;font-weight:900;font-family:ui-rounded,"Arial Rounded MT Bold","Nunito","Trebuchet MS",system-ui,sans-serif;text-transform:uppercase;line-height:1;
-color:hsl(var(--h) var(--ls) var(--ll));
+color:var(--ink,hsl(var(--h) var(--ls) var(--ll)));
 -webkit-text-fill-color:currentColor;
-text-shadow:0 1px 0 rgba(0,0,0,.18); /* мягкая матовая тень */ }
+text-shadow:none; }
 @media (hover:hover) and (pointer:fine){
   .lt{ filter: drop-shadow(0 1px 0 rgba(0,0,0,.18)); }
 }
@@ -257,6 +257,38 @@ const POOL=AL+"оооооеееееаааааииинннттссрррввлл�
 const $=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms)),rnd=n=>Math.floor(Math.random()*n),rr=(a,b)=>a+Math.random()*(b-a);
 const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 const hue=i=>(i*137.5)%360|0,st=i=>`--h:${hue(i)};--d:${[-6,0,6][i%3]}%`;
+
+// Подбор оттенка букв по WCAG AA: не менее 4.5:1 относительно реального фона клетки.
+const inkCache=new Map();
+const colorCanvas=document.createElement("canvas"),colorCtx=colorCanvas.getContext("2d",{willReadFrequently:true});
+function rgbFromCss(s){
+  if(colorCtx){colorCtx.clearRect(0,0,1,1);colorCtx.fillStyle="#000";colorCtx.fillStyle=s;colorCtx.fillRect(0,0,1,1);const p=colorCtx.getImageData(0,0,1,1).data;return [p[0],p[1],p[2]]}
+  const m=s.match(/[\\d.]+/g);return m?m.slice(0,3).map(Number):[255,255,255]
+}
+function hslRgb(h,s,l){
+  s/=100;l/=100;const c=(1-Math.abs(2*l-1))*s,x=c*(1-Math.abs((h/60)%2-1)),m=l-c/2;
+  let r=0,g=0,b=0;
+  if(h<60)[r,g,b]=[c,x,0];else if(h<120)[r,g,b]=[x,c,0];else if(h<180)[r,g,b]=[0,c,x];
+  else if(h<240)[r,g,b]=[0,x,c];else if(h<300)[r,g,b]=[x,0,c];else [r,g,b]=[c,0,x];
+  return [r,g,b].map(v=>Math.round((v+m)*255));
+}
+function lum(rgb){const a=rgb.map(v=>{v/=255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4});return .2126*a[0]+.7152*a[1]+.0722*a[2]}
+function contrast(a,b){const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05)}
+function letterInk(h){
+  const theme=document.documentElement.dataset.theme|| (matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");
+  const key=theme+":"+h;if(inkCache.has(key))return inkCache.get(key);
+  const probe=document.createElement("button");probe.className="f";probe.style.cssText="position:absolute;visibility:hidden;pointer-events:none;--h:"+h;
+  document.body.appendChild(probe);
+  const bg=rgbFromCss(getComputedStyle(probe).backgroundColor);probe.remove();
+  const target=theme==="dark"?68:60;let best=null,bestDist=Infinity;
+  for(let l=0;l<=1000;l++){
+    const light=l/10,ratio=contrast(hslRgb(h,55,light),bg);
+    if(ratio>=4.5){const d=Math.abs(light-target);if(d<bestDist){bestDist=d;best=`hsl(${h} 55% ${light}%)`}}
+  }
+  // Чёрный/белый — гарантированный запасной вариант для крайне необычных тем.
+  if(!best)best=contrast([0,0,0],bg)>=contrast([255,255,255],bg)?"#000":"#fff";
+  inkCache.set(key,best);return best;
+}
 const LITE=(navigator.hardwareConcurrency||8)<=4||(navigator.deviceMemory||8)<=2;
 document.body.classList.toggle("lite",LITE);
 /* ---- сохранение и настройки ---- */
@@ -285,7 +317,7 @@ let dictSrc="встроенный";
 async function loadDict(){
  if(Array.isArray(window.WORDS)){setDict(window.WORDS);if(W.length>=20)dictSrc="words.js"}
  if(W.length<20){try{const r=await fetch("words.json",{cache:"no-store"});if(r.ok){const j=await r.json();setDict(Array.isArray(j)?j:j.words);if(W.length>=20)dictSrc="words.json"}}catch(e){}}
- if(W.length<20){setDict(BASE.split(" "));dictSrc="встроенный"}
+ if(W.length<20){setDict(BASE);dictSrc="встроенный"}
 }
 const dictReady=loadDict();
 /* ---- окна ---- */
@@ -359,6 +391,7 @@ function renderCell(i){
    if (c._v !== v){
      L.textContent = AL[v];
      c.style.setProperty('--h', hue(v));
+     c.style.setProperty('--ink', letterInk(hue(v)));
      c.style.setProperty('--d', [-6,0,6][v % 3] + '%');
      c._v = v;
    }
@@ -367,6 +400,7 @@ function renderCell(i){
    c._L = null;
    c._v = -1;
    c.style.removeProperty('--h');
+   c.style.removeProperty('--ink');
    c.style.removeProperty('--d');
  }
 
@@ -647,6 +681,7 @@ async function move(p){
  fly.style.height=size+"px";
  fly.style.fontSize=(size*.7)+"px";
  fly.style.setProperty("--h",hue(letter));
+ fly.style.setProperty("--ink",getComputedStyle(c1).getPropertyValue("--ink").trim()||letterInk(hue(letter)));
  fly.style.setProperty("--d",[-6,0,6][letter%3]+"%");
  layer.appendChild(fly);
 
