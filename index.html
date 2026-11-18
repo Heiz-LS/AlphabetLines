@@ -232,7 +232,7 @@ html.desk .bst{padding:10px 2px 8px}html.desk .bst .ic{font-size:28px}
  </section>
  <section class="screen" id="game">
   <div id="gpanel">
-   <div class="top"><button class="btn round" id="bPause" aria-label="Пауза"><svg viewBox="0 0 24 24" width="22" height="22"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="#fff"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="#fff"/></svg></button><button class="btn round" id="bMenu" aria-label="Главное меню" title="Главное меню">⌂</button>
+   <div class="top"><button class="btn round" id="bPause" aria-label="Пауза"><svg viewBox="0 0 24 24" width="22" height="22"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="#fff"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="#fff"/></svg></button>
     <div class="hud"><div class="box"><small>Очки</small><b id="score">0</b></div><div class="box"><small>Слов</small><b id="words">0</b></div></div></div>
    <div class="goal" id="goal"></div>
    <div class="recp"><span style="font-size:30px">🏆</span><div><small id="recl">Рекорд</small><b id="recv">0</b></div></div>
@@ -418,15 +418,19 @@ function go(){cov();g.busy=false;playing=true;snd.spawn()}
 const resume=()=>{paused=false;cov()};
 function pauseMenu(){
  if(!playing||g.over)return;paused=true;
- ov(`<button class="x" id="cx">✕</button><h2>Пауза</h2>`,[["▶ Продолжить",resume,"ok"],["⚙ Настройки",()=>ovSet(),"alt"],["↻ Заново",()=>begin(g.mode,g.level),"alt"],["⌂ В меню",()=>{cov();show("menu")},"alt"]],1);
+ ov(`<button class="x" id="cx">✕</button><h2>Пауза</h2>`,[["▶ Продолжить",resume,"ok"],["⚙ Настройки",()=>ovSet(),"alt"],["📖 Правила",()=>ovRules(),"alt"],["↻ Заново",()=>begin(g.mode,g.level),"alt"],["⌂ В меню",()=>{cov();show("menu")},"alt"]],1);
  $("cx").onclick=resume;
+}
+function ovRules(){
+ paused=true;
+ ov(`<button class="x" id="cx">✕</button><h2>Правила</h2><div class="rl" style="max-height:min(55dvh,430px);min-height:0">${rulesHTML()}</div>`,[["← Назад к паузе",pauseMenu,"alt"]],1);
+ $("cx").onclick=pauseMenu;
 }
 function ovSet(){
  paused=true;ov(`<button class="x" id="cx">✕</button><div id="sbx" style="display:contents"></div>`,[],1);
  $("cx").onclick=resume;buildSettings($("sbx"),["← Назад",pauseMenu]);
 }
 $("bPause").onclick=pauseMenu;
-$("bMenu").onclick=()=>{if(!playing||g.over)return;snd.click();paused=true;ov(`<h2>В главное меню?</h2><p>Текущая партия будет завершена.</p>`,[["Продолжить",resume,"ok"],["⌂ В меню",()=>{cov();paused=false;show("menu")},"alt"]],1)};
 /* ---- генерация букв ---- */
 function formable(c,need){let f=0;for(const w of WI){const t=c.slice();let ok=true;for(const i of w){if(--t[i]<0){ok=false;break}}if(ok&&++f>=need)return true}return false}
 function inventory(grid=g.grid){
