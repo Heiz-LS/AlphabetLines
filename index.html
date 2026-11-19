@@ -297,7 +297,22 @@ try{Object.assign(S,JSON.parse(ls.get("wl_save")||"{}"))}catch(e){}if(!["auto","
 S.spawn=[1,2,3].includes(+S.spawn)?+S.spawn:2;
 const save=()=>ls.set("wl_save",JSON.stringify(S));
 const THEMES={auto:"Авто",light:"Светлая",dark:"Ночь"};
-function applySettings(){const r=document.documentElement;S.theme=="auto"?r.removeAttribute("data-theme"):r.dataset.theme=S.theme;r.classList.toggle("noanim",!S.anim)}
+function applySettings(){
+  const r=document.documentElement;
+  S.theme=="auto"
+    ?r.removeAttribute("data-theme")
+    :r.dataset.theme=S.theme;
+
+  r.classList.toggle("noanim",!S.anim);
+
+  // Пересчитываем цвета всех уже находящихся на поле букв
+  refreshLetterColors();
+}
+
+// Если тема устройства меняется в режиме «Авто», перекрашиваем буквы
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{
+  if(S.theme==="auto") refreshLetterColors();
+});
 /* ---- звук ---- */
 let AC;
 function tone(f,d=.1,t="sine",v=.15,at=0){if(!S.snd)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain(),s=AC.currentTime+at;o.type=t;o.frequency.setValueAtTime(f,s);g.gain.setValueAtTime(v*S.vol,s);g.gain.exponentialRampToValueAtTime(.001,s+d);o.connect(g);g.connect(AC.destination);o.start(s);o.stop(s+d)}catch(e){}}
@@ -419,6 +434,26 @@ function render(){
 }
 function renderCells(ids){
  for(const i of ids)renderCell(i);
+}
+
+// Перекрашивание всех существующих букв при смене темы
+function refreshLetterColors(){
+  inkCache.clear();
+
+  for(let i=0;i<T;i++){
+    const v=g.grid[i];
+    if(v>=0){
+      cells[i].style.setProperty("--ink",letterInk(hue(v)));
+    }
+  }
+
+  // Обновляем также буквы, которые сейчас анимированно перемещаются
+  document.querySelectorAll("#flylayer .fly").forEach(el=>{
+    const v=AL.indexOf(el.textContent.trim());
+    if(v>=0){
+      el.style.setProperty("--ink",letterInk(hue(v)));
+    }
+  });
 }
 function bump(id,v){$(id).textContent=v}
 function buildHud(){
