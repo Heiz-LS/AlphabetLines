@@ -71,6 +71,14 @@ background:linear-gradient(160deg,var(--acc),var(--acc2));box-shadow:0 4px 0 col
 .pgoal span{position:relative;display:block;text-align:center;line-height:30px;font-weight:900;font-size:14px;color:var(--fg);text-shadow:0 0 4px var(--bg1), 0 0 4px var(--bg1)}
 .recp,#wl{display:none}
 #toast{order:3;min-height:26px;text-align:center;font-weight:800;color:var(--acc)}
+/* предпросмотр следующего набора букв */
+#nextbox{display:flex;flex-direction:column;gap:7px;padding:10px 12px;border-radius:16px;background:linear-gradient(180deg,var(--card),var(--card2));box-shadow:inset 0 0 0 1px var(--line),0 3px 0 var(--line)}
+.next-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.next-title{font-size:11px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--mut)}
+.next-count{font-size:11px;font-weight:900;color:var(--acc)}
+#nextletters{display:flex;justify-content:center;align-items:center;gap:9px;min-height:48px}
+.next-tile{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;font-size:27px;font-weight:900;box-shadow:0 3px 0 color-mix(in oklab,hsl(var(--h) 45% 45%) 35%,transparent),inset 0 1px 0 rgba(255,255,255,.35)}
+#nextletters .next-empty{font-size:12px;color:var(--mut);font-weight:700}
 #gpanel{display:contents}
 /* поле */
 #bwrap{flex:1;min-height:0;container-type:size;display:flex;align-items:center;justify-content:center}
@@ -166,6 +174,8 @@ html:not(.desk) #bwrap{flex:0 1 auto;width:100%;aspect-ratio:1/1;min-height:0;al
 html.desk #app{position:absolute;left:50%;top:50%;width:var(--sw,1320px);height:720px;transform:translate(-50%,-50%) scale(var(--sc,1))}
 html.desk #game{flex-direction:row;align-items:center;justify-content:center;gap:40px;padding:0}
 html.desk #gpanel{display:flex;flex-direction:column;flex:none;width:380px;height:680px;gap:12px;padding:18px;border-radius:30px;background:linear-gradient(180deg,var(--card),var(--card2));box-shadow:0 16px 36px -10px rgba(0,0,0,.4),inset 0 0 0 1px var(--line2)}
+html.desk #nextbox{padding:12px 14px;gap:9px}
+html.desk .next-tile{width:48px;height:48px;font-size:31px}
 html.desk #bwrap{flex:none;width:680px;height:680px}
 html.desk .screen:not(#game){left:calc(50% - 360px);right:auto;width:720px}
 html.desk .lvgrid{grid-template-columns:repeat(5,1fr)}
@@ -233,6 +243,10 @@ html.desk .bst{padding:10px 2px 8px}html.desk .bst .ic{font-size:28px}
   <div id="gpanel">
    <div class="top"><button class="btn round" id="bPause" aria-label="Пауза"><svg viewBox="0 0 24 24" width="22" height="22"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="#fff"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="#fff"/></svg></button>
     <div class="hud"><div class="box"><small>Очки</small><b id="score">0</b></div><div class="box"><small>Слов</small><b id="words">0</b></div></div></div>
+   <div id="nextbox" aria-live="polite">
+    <div class="next-head"><span class="next-title">Следующие буквы</span><span class="next-count" id="nextcount">2 буквы</span></div>
+    <div id="nextletters"><span class="next-empty">Подготовка…</span></div>
+   </div>
    <div class="goal" id="goal"></div>
    <div class="recp"><span style="font-size:30px">🏆</span><div><small id="recl">Рекорд</small><b id="recv">0</b></div></div>
    <div id="wl"></div>
@@ -348,7 +362,7 @@ function buildSettings(box,back){
  box.innerHTML=`<h2 class="ab-h">НАСТРОЙКИ</h2>${swRow("🔊","Звук","snd")}<div class="srow"><span>🔉 Громкость</span><input type="range" class="vr" min="0" max="100" value="${S.vol*100}"></div>${swRow("📳","Вибрация","vib")}${swRow("✨","Анимации","anim")}<small class="sl">➕ Новые буквы за ход без слова</small><div class="seg">${[1,2,3].map(n=>`<button data-spawn="${n}" class="${S.spawn==n?"on":""}">${n}</button>`).join("")}</div><small style="color:var(--mut);font-weight:700;text-align:left">Меньше букв — спокойнее игра. Настройку можно менять в любой момент.</small><small class="sl">🎨 Тема оформления</small><div class="seg">${Object.entries(THEMES).map(([k,t])=>`<button data-th="${k}" class="${S.theme==k?"on":""}">${t}</button>`).join("")}</div><button class="btn alt" data-a="rst">🗑 Сбросить прогресс</button>`;
  box.querySelectorAll("input[data-k]").forEach(i=>i.onchange=()=>{S[i.dataset.k]=i.checked?1:0;save();applySettings();i.dataset.k=="vib"?vib(40):snd.click()});
  const vr=box.querySelector(".vr");vr.oninput=()=>{S.vol=vr.value/100;save()};vr.onchange=snd.click;
- box.querySelectorAll("[data-spawn]").forEach(b=>b.onclick=()=>{S.spawn=+b.dataset.spawn;save();box.querySelectorAll("[data-spawn]").forEach(x=>x.classList.toggle("on",x===b));snd.click()});
+ box.querySelectorAll("[data-spawn]").forEach(b=>b.onclick=()=>{S.spawn=+b.dataset.spawn;save();box.querySelectorAll("[data-spawn]").forEach(x=>x.classList.toggle("on",x===b));if(g.grid&&g.grid.length)refreshNextLetters();snd.click()});
  box.querySelectorAll("[data-th]").forEach(b=>b.onclick=()=>{S.theme=b.dataset.th;save();applySettings();box.querySelectorAll("[data-th]").forEach(x=>x.classList.toggle("on",x===b));snd.click()});
  const r=box.querySelector("[data-a=rst]");let sure=false;
  r.onclick=()=>{if(!sure){sure=true;r.textContent="Точно сбросить? Нажми ещё раз";return}S.unlocked=1;S.best=0;S.lb={};S.tw=0;save();updMenu();sure=false;r.textContent="Прогресс сброшен ✓"};
@@ -478,7 +492,7 @@ async function begin(mode,level){
  await dictReady;
  const L=mode=="lvl";g={grid:Array(T).fill(-1),score:0,words:0,sel:-1,busy:true,mode,level,fresh:null,hint:null,hammer:false,snap:null,hints:L?3:5,ham:L?2:3,shf:L?1:2,und:L?2:3};paused=false;playing=false;
  cells.forEach(c=>{c._L=null;c._v=-1;c._cls=null;c.innerHTML="";c.className="";c.style.cssText="";}); // полный сброс кэша при новой игре
- show("game");fxSize();g.fresh=new Set(spawn(5));render();buildHud();
+ show("game");fxSize();g.fresh=new Set(spawn(5));g.nextLetters=makeLetters(S.spawn);renderNextLetters();render();buildHud();
  if(mode=="lvl")ov(`<h2>Уровень ${level}</h2><div class="chip">🎯 ${goalTxt(level)}</div>`,[["Старт",go]]);
  else go();
 }
@@ -528,19 +542,18 @@ function closestWord(c,preferred=6){
  }
  return best;
 }
-function spawn(k){
- const empty=[];g.grid.forEach((v,i)=>v<0&&empty.push(i));
- // Fisher–Yates вместо sort с некорректным случайным компаратором.
- for(let i=empty.length-1;i>0;i--){const j=rnd(i+1);[empty[i],empty[j]]=[empty[j],empty[i]]}
- k=Math.min(k,empty.length);
+function makeLetters(k){
+ k=Math.max(0,Math.min(k,T));
  const rn=()=>AL.indexOf(POOL[rnd(POOL.length)]);
  const cnt=inventory(),total=g.grid.filter(v=>v>=0).length;
  let add=Array.from({length:k},rn);
  if(total===0&&k>=5&&WI.length){
   // Гарантированное стартовое слово из стартового набора.
   const candidates=WI.filter(w=>w.length===5);
-  const word=(candidates.length?candidates:WI.filter(w=>w.length<=5))[rnd(candidates.length||WI.filter(w=>w.length<=5).length)];
-  if(word){word.forEach((ch,i)=>add[i]=ch)}
+  const fallback=WI.filter(w=>w.length<=5);
+  const pool=candidates.length?candidates:fallback;
+  const word=pool.length?pool[rnd(pool.length)]:null;
+  if(word)word.forEach((ch,i)=>add[i]=ch);
  }else if(total+k>=5&&WI.length){
   // Генерация намеренно тяготеет к словам, а не к бессмысленному набору.
   const composed=cnt.slice();add.forEach(ch=>composed[ch]++);
@@ -557,8 +570,34 @@ function spawn(k){
    }
   }
  }
+ return add;
+}
+function renderNextLetters(){
+ const host=$("nextletters"),count=$("nextcount");
+ if(!host||!count)return;
+ const letters=Array.isArray(g.nextLetters)?g.nextLetters:[];
+ count.textContent=letters.length+" "+(letters.length===1?"буква":letters.length>=2&&letters.length<=4?"буквы":"букв");
+ host.innerHTML=letters.length?letters.map(v=>`<span class="next-tile" style="${st(v)};--ink:${letterInk(hue(v))}"><i class="lt" style="--ink:${letterInk(hue(v))}">${AL[v]}</i></span>`).join(""):'<span class="next-empty">Поле заполнено</span>';
+}
+function refreshNextLetters(){
+ if(!g.grid||!g.grid.length)return;
+ g.nextLetters=makeLetters(S.spawn);
+ renderNextLetters();
+}
+function spawn(k,usePreview=false){
+ const empty=[];g.grid.forEach((v,i)=>v<0&&empty.push(i));
+ // Fisher–Yates вместо sort с некорректным случайным компаратором.
+ for(let i=empty.length-1;i>0;i--){const j=rnd(i+1);[empty[i],empty[j]]=[empty[j],empty[i]]}
+ k=Math.min(k,empty.length);
+ let add;
+ if(usePreview&&Array.isArray(g.nextLetters)&&g.nextLetters.length){
+  add=g.nextLetters.slice(0,k);
+ }else{
+  add=makeLetters(k);
+ }
  add.forEach((l,i)=>g.grid[empty[i]]=l);
- return empty.slice(0,k);
+ if(usePreview){g.nextLetters=makeLetters(S.spawn);renderNextLetters()}
+ return empty.slice(0,add.length);
 }
 
 // ---- ЛИНИИ ДЛЯ ПОИСКА СЛОВ ----
@@ -750,7 +789,7 @@ async function move(p){
  let r=findWords();
  if(r.found.length) await clear(r);
  else {
-   g.fresh = new Set(spawn(S.spawn));
+   g.fresh = new Set(spawn(S.spawn,true));
    render();
    snd.spawn();
    r = findWords();
